@@ -1,16 +1,41 @@
-# PixPro AI图片处理库（AI Image Processing Library）
+<div align="center" style="margin-bottom: 20px;">
+  <a href="https://pixpro.cc/" target="_black">
+    <img
+      src="./assets/pixpro.svg"
+      alt="PixPro"
+      height="64"
+    />
+  </a>
+  <h2>PixPro AI图片处理库（AI Image Processing Library）</h2>
+</div>
+
+
 
 ## 简介
 
-PixPro 是一个图片处理工具，提供了图片处理的基础功能，如常用的裁剪、等比例缩放、翻转、镜像、旋转等功能。同时，PixPro 还嵌入了各类第三方的AI图像处理能力，例如AI 扩图、AI擦除、AI去背景、AI提升解析度（更多陆续更新..），您可以在任意网页端快速嵌入该工具【任意图片上传框、表单、后台等等】，即可实现无缝AI图像处理体验。
+PixPro 是一个图片处理工具，提供了图片处理的基础功能，如常用的裁剪、等比例缩放、翻转、镜像、旋转等功能。同时，PixPro 还嵌入了各类第三方的AI图像处理能力，例如AI 扩图、AI擦除、AI去背景、AI提升解析度（更多陆续更新..）。
+
+您可以在任意网页端快速嵌入该工具【任意图片上传框、表单、后台等等】，即可实现无缝AI图像处理体验。
 
 ### 多平台兼容
 
-PixPro 底层功能基于 TypeScript 进行开发，并提供 Vue3 以及 React18 的版本的 UI 套件，你可以在 example 目录下找到相对应的 UI 套件。
+PixPro 底层功能基于 TypeScript 进行开发，并提供 Vue3、React18、原生 HTML、Vue2 等常见库的 UI 套件（陆续更新中）。
 
 ## 演示
 
 [PixPro 官网](https://pixpro.cc/)
+
+## 安装
+
+底层库
+```bash
+npm install @pixpro/core
+```
+
+Vue3 UI 套件
+```bash
+npm install @pixpro/vue
+```
 
 ## 功能
 
@@ -25,7 +50,7 @@ PixPro 提供以下基础图像处理功能：
 5. **缩放（Resize）** - 等比例缩放图像，保持原始比例
 6. **压缩容量** - 在保证图片质量的基础上，有效降低图片的容量
 
-![裁剪功能演示](./docs/1-裁切.gif)
+![裁剪功能演示](./assets/1-裁切.gif)
 
 ### AI 高级功能
 
@@ -33,23 +58,23 @@ PixPro 还提供以下 AI 驱动的高级图像处理功能：
 
 1. **AI 扩图** - 向外扩展图片，AI 自动填充图片以外的部分（详见以下 gif 展示）；
 
-![AI 扩图演示](./docs/2-扩图.gif)
+![AI 扩图演示](./assets/2-扩图.gif)
 
 2. **AI 擦除** - 选取想要从图片中移除的物件，AI 自动擦除并修复（详见以下 gif 展示）；
 
-![AI 擦除演示](./docs/3-擦除.gif)
+![AI 擦除演示](./assets/3-擦除.gif)
 
 3. **AI 去背景** - 一键抠出图片中的主体，可选择透明或自定义背景色（详见以下 gif 展示）；
 
-![AI 去背景演示](./docs/4-移除背景.gif)
+![AI 去背景演示](./assets/4-移除背景.gif)
 
 4. **AI 提升解析度** - 提高图像清晰度，目前最大可提升至 5000 x 5000（详见以下 gif 展示）；
 
-![AI 提升解析度演示](./docs/5-提升解析度.gif)
+![AI 提升解析度演示](./assets/5-提升解析度.gif)
 
 ## 快速开始
 
-### 基础使用
+### 底层库
 
 ```typescript
 import PixPro from './pixpro';
@@ -84,9 +109,48 @@ const pixpro = new PixPro(document.getElementById('container'), {
 });
 ```
 
-## API 参考
+### Vue3 UI 套件
 
-### 主要方法
+```vue
+<template>
+  <div class="editor-container">
+    <pix-pro-vue
+      :token="token"
+      :host="host"
+      @export-image="handleExportImage"
+      @close="handleClose"
+    />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+import { PixProVue } from '@pixpro/vue'
+import '@pixpro/vue/dist/index.css'
+
+const token = 'your_token'
+const host = 'https://api.example.com'
+
+const handleExportImage = (imageData: string) => {
+  console.log('导出的图片数据:', imageData)
+}
+
+const handleClose = () => {
+  console.log('编辑器关闭')
+}
+</script>
+
+<style>
+.editor-container {
+  width: 100%;
+  height: 600px;
+}
+</style>
+```
+
+### API 参考
+
+#### 主要方法
 
 | 方法 | 描述 | 参数 |
 | --- | --- | --- |
@@ -107,7 +171,7 @@ const pixpro = new PixPro(document.getElementById('container'), {
 | `setRemoveBgColor(color)` | 设置去背景后的背景颜色 | `color`: 颜色值 |
 | `resetAll()` | 重置所有操作 | - |
 
-### 初始化选项
+#### 初始化选项
 
 | 选项 | 类型 | 必填 | 描述 |
 | --- | --- | --- | --- |
@@ -174,3 +238,7 @@ const options = {
   }
 };
 ```
+
+### 许可证
+
+PixPro 使用 [MIT 许可证](./LICENSE)。

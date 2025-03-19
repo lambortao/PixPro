@@ -1,0 +1,32 @@
+@import "./_constant.less";
+
+.colored-btn-component {
+  button {
+    margin: 20px auto;
+    width: 128px;
+    height: 36px;
+    border-radius: @radius;
+    border: none;
+    color: #fff;
+    background: linear-gradient(to right, #184aff 0%, #fc9bff 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    cursor: pointer;
+    .ani300;
+
+    :deep(svg) {
+      color: #fff;
+    }
+
+    &:active {
+      transform: scale(0.97);
+    }
+
+    &:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+  }
+}

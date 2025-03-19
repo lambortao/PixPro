@@ -1,0 +1,29 @@
+body {
+  margin: 0;
+  padding: 0;
+}
+
+.box {
+  width: 80vw;
+  height: 60vh;
+  background-color: #f0f0f0;
+  margin: 30px auto;
+  position: relative;
+}
+
+.dots {
+  width: 20px;
+  height: 20px;
+  background-color: red;
+  position: absolute;
+  top: 30px;
+  left: 30px;
+}
+
+.dots.n {
+  top: 0;
+}
+
+.dots.s {
+  left: 0;
+}

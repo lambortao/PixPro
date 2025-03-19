@@ -1,0 +1,379 @@
+.photo-studio-container {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.upload-container {
+  box-sizing: border-box;
+  /* box-shadow: 0 2px 5px 0 rgba(22,45,61,.12),0 0 7px 0 rgba(22,45,61,.12); */
+  border-radius: 6px;
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  display: flex;
+}
+.upload-container-input {
+  box-sizing: border-box;
+  position: relative;
+  border: 1px dashed #e0e0e0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.upload-container-input > div {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.upload-container-input input {
+  box-sizing: border-box;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 1;
+  text-align: center;
+}
+.upload-container-input svg {
+  font-size: 40px;
+  color: #909399;
+}
+.upload-container-input p {
+  box-sizing: border-box;
+  margin-top: 10px;
+  font-size: 14px;
+  color: #909399;
+}
+.preview-control-container {
+  box-sizing: border-box;
+  position: relative;
+  max-height: 100%;
+  cursor: move;
+}
+.preview-control-container.none-drag {
+  cursor: default;
+}
+.preview-container {
+  position: relative;
+  /** 设置 Photoshop 样式的透明棋盘格背景 */
+  background-image: linear-gradient(45deg, #efefef 25%, transparent 25%, transparent 75%, #efefef 75%, #efefef), linear-gradient(45deg, #efefef 25%, transparent 25%, transparent 75%, #efefef 75%, #efefef);
+  background-size: 20px 20px;
+  background-position: 0 0, 10px 10px;
+  background-color: white; /* 添加背景色，避免透出后面的背景色 */
+}
+#preview-curtain-box {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  overflow: hidden;
+  z-index: 2;
+}
+#remind-image {
+  position: absolute;
+  margin: 0;
+  z-index: 1;
+  transform-style: preserve-3d;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transform: translateZ(0);
+}
+#remind-image canvas {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+#remind-image::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  background-color: rgba(255, 255, 255, 0.7);
+}
+#remind-image img {
+  position: absolute;
+}
+.top {
+  top: 0;
+}
+.left {
+  left: 0;
+}
+.right {
+  right: 0;
+}
+.bottom {
+  bottom: 0;
+}
+
+#container-canvas {
+  position: absolute;
+  transform-style: preserve-3d;
+  will-change: transform;
+  backface-visibility: hidden;
+  image-rendering: crisp-edges;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+.control-container, .eraser-container {
+  box-sizing: border-box;
+
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 1px solid #e0e0e0;
+  z-index: 3;
+}
+.eraser-container {
+  z-index: 5;
+  opacity: 0.5;
+}
+.control-container span {
+  position: absolute;
+}
+span.tl, span.tr, span.bl, span.br {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+span.tl:before, span.tr:before, span.bl:before, span.br:before {
+  content: '';
+  width: 14px;
+  height: 14px;
+  background-color: #fff;
+  border: 1px solid #b5b4b4;
+}
+span.tc, span.bc {
+  width: calc(100% - 32px);
+  left: 16px;
+  height: 16px;
+}
+span.ml, span.mr {
+  width: 16px;
+  height: calc(100% - 32px);
+  top: 16px;
+}
+.control-container.is-dev span.tl, 
+.control-container.is-dev span.tr, 
+.control-container.is-dev span.bl, 
+.control-container.is-dev span.br {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+.control-container.is-dev span.tc, 
+.control-container.is-dev span.bc {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+.control-container.is-dev span.ml,
+.control-container.is-dev span.mr {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+span.ml {
+  left: -8px;
+  cursor: w-resize;
+}
+span.mr {
+  right: -8px;
+  cursor: e-resize;
+}
+span.tc {
+  top: -8px;
+  cursor: n-resize;
+}
+span.bc {
+  bottom: -8px;
+  cursor: s-resize;
+}
+span.tl {
+  left: -16px;
+  top: -16px;
+  cursor: nw-resize;
+}
+span.tr {
+  right: -16px;
+  top: -16px;
+  cursor: ne-resize;
+}
+span.bl {
+  bottom: -16px;
+  left: -16px;
+  cursor: sw-resize;
+}
+span.br {
+  right: -16px;
+  bottom: -16px;
+  cursor: se-resize;
+}
+span.inline {
+  width: 24px;
+  height: 24px;
+}
+.show {
+  display: block;
+}
+.hide {
+  display: none;
+}
+
+/* 确认扩展弹窗动画 */
+@keyframes slideIn {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+}
+
+/* 确认扩展弹窗样式 */
+.confirm-expand-wrapper {
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  padding-bottom: 60px;
+  z-index: 10;
+}
+
+.confirm-expand-container {
+  background-color: white;
+  border-radius: 8px;
+  padding: 20px 30px;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  border: 1px solid #eaeaea;
+  min-width: 220px;
+  animation: slideIn 200ms ease-out forwards;
+}
+
+.confirm-expand-exit .confirm-expand-container {
+  animation: slideOut 200ms ease-in forwards;
+}
+
+.confirm-expand-container p {
+  margin: 0 0 20px 0;
+  font-size: 16px;
+  color: #333;
+  font-weight: 500;
+}
+
+.confirm-expand-container-btn {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+}
+
+.confirm-expand-container-btn button {
+  padding: 8px 20px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+  min-width: 80px;
+}
+
+.confirm-expand-container-btn-confirm {
+  background-color: #184aff;
+  color: white;
+  font-weight: 500;
+}
+
+.confirm-expand-container-btn-confirm:hover {
+  background-color: #1040e6;
+  box-shadow: 0 2px 5px rgba(24, 74, 255, 0.2);
+}
+
+.confirm-expand-container-btn-cancel {
+  background-color: #f5f5f5;
+  color: #444;
+  border: 1px solid #e0e0e0;
+}
+
+.confirm-expand-container-btn-cancel:hover {
+  background-color: #ebebeb;
+}
+
+
+/* 鼠标缩放提示动画 */
+@keyframes zoomTipSlideIn {
+  from {
+    opacity: 0;
+    margin-top: -10px;
+  }
+  to {
+    opacity: 1;
+    margin-top: 0;
+  }
+}
+
+@keyframes zoomTipSlideOut {
+  from {
+    opacity: 1;
+    margin-top: 0;
+  }
+  to {
+    opacity: 0;
+    margin-top: -10px;
+  }
+}
+
+.mouse-zoom-tip {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #fff;
+  color: #333;
+  font-size: 14px;
+  padding: 20px 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+  z-index: 21;
+  display: none;
+}
+
+.mouse-zoom-tip.show {
+  display: block;
+  animation: zoomTipSlideIn 0.2s ease-in-out forwards;
+}
+
+.mouse-zoom-tip.hide {
+  animation: zoomTipSlideOut 0.2s ease-in-out forwards;
+}

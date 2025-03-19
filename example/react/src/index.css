@@ -1,0 +1,64 @@
+/* 全局样式 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* App 容器样式 */
+.app-container {
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.box {
+  width: 100%;
+  height: 100%;
+  padding: 60px 40px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.export-img-box {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 46px;
+  box-sizing: border-box;
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.export-img-box img {
+  max-width: 80%;
+  max-height: 80%;
+}
+
+.loading-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.loading-spinner {
+  color: #fff;
+  font-size: 16px;
+}

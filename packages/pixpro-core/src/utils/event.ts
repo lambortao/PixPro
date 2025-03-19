@@ -167,7 +167,7 @@ class Renderer {
     this.host = host;
     this.routes = routes;
     this.action = action;
-
+    
     // 更新 httpClient 的 baseURL
     httpClient.setBaseURL(host);
   }

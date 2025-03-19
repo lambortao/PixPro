@@ -1,0 +1,43 @@
+{
+  "name": "@pixpro/core",
+  "version": "0.1.1-beta.1",
+  "description": "图片处理底层库，提供裁剪、缩放、AI 扩图等功能",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "rollup -c",
+    "prepublishOnly": "npm run build"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "image",
+    "processing",
+    "AI",
+    "crop",
+    "resize"
+  ],
+  "author": "Lambortao",
+  "license": "MIT",
+  "dependencies": {
+    "compressorjs": "^1.2.1",
+    "lodash-es": "^4.17.21",
+    "uuid": "^11.0.5"
+  },
+  "devDependencies": {
+    "@rollup/plugin-alias": "^5.1.0",
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.0",
+    "@rollup/plugin-terser": "^0.4.0",
+    "@rollup/plugin-typescript": "^11.0.0",
+    "rollup": "^4.0.0",
+    "rollup-plugin-postcss": "^4.0.2",
+    "typescript": "^5.7.2"
+  }
+}

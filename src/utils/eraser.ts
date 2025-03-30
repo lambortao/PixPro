@@ -1,11 +1,15 @@
-import type { IErasePoint, IErasePoints } from '@/types/IType';
+import type { IErasePoint, IErasePoints, IEraserSize } from '@/types/IType';
 
 export default class Eraser {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
   private defaultColor: string = 'rgba(24, 74, 255, 0.3)'
   private isDrawing: boolean = false;
-  private eraserSize: number = 20;
+  private eraserSize: IEraserSize = {
+    min: 2,
+    max: 100,
+    default: 20
+  };
   private lastX: number = 0;
   private lastY: number = 0;
   // 使用二维数组存储点位信息，每个子数组代表一次绘制
@@ -18,21 +22,29 @@ export default class Eraser {
   private boundStartDrawing: (event: MouseEvent) => void;
   private boundDraw: (event: MouseEvent) => void;
   private boundStopDrawing: (event: MouseEvent) => void;
+  private boundWheel: (event: WheelEvent) => void;
+  private onEraserSizeChange?: (size: number) => void;
 
   constructor(
     canvas: HTMLCanvasElement,
-    eraserSize: number,
     width: number,
     height: number,
     styleWidth: string,
     styleHeight: string,
     initPoints?: Array<Array<{x: number, y: number, size: number, color: string}>>,
     onDrawEnd?: (points: Array<Array<{x: number, y: number, size: number, color: string}>>) => void,
-    dominantColorCanvas?: HTMLCanvasElement
+    dominantColorCanvas?: HTMLCanvasElement,
+    eraserSize?: IEraserSize,
+    onEraserSizeChange?: (size: number) => void
   ) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d')!;
-    this.eraserSize = eraserSize;
+    if (eraserSize) {
+      this.eraserSize = { ...eraserSize }
+      if (onEraserSizeChange) {
+        this.onEraserSizeChange = onEraserSizeChange;
+      }
+    }
     this.onDrawEnd = onDrawEnd;
 
     // 如果提供了dominantColorCanvas，先执行取色逻辑
@@ -53,6 +65,7 @@ export default class Eraser {
     this.boundStartDrawing = this.startDrawing.bind(this);
     this.boundDraw = this.draw.bind(this);
     this.boundStopDrawing = this.stopDrawing.bind(this);
+    this.boundWheel = this.handleWheel.bind(this);
     
     this.setupEventListeners();
     this.clearCanvas();
@@ -65,19 +78,19 @@ export default class Eraser {
   private updateCursor(): void {
     const svgCursor = `
       <svg xmlns="http://www.w3.org/2000/svg" 
-           width="${this.eraserSize}" 
-           height="${this.eraserSize}" 
-           viewBox="0 0 ${this.eraserSize} ${this.eraserSize}">
+           width="${this.eraserSize.default}" 
+           height="${this.eraserSize.default}" 
+           viewBox="0 0 ${this.eraserSize.default} ${this.eraserSize.default}">
         <circle 
-          cx="${this.eraserSize/2}" 
-          cy="${this.eraserSize/2}" 
-          r="${this.eraserSize/2}" 
+          cx="${this.eraserSize.default/2}" 
+          cy="${this.eraserSize.default/2}" 
+          r="${this.eraserSize.default/2}" 
           fill="${this.defaultColor}"
         />
       </svg>`;
 
     const encodedCursor = encodeURIComponent(svgCursor);
-    this.canvas.style.cursor = `url('data:image/svg+xml;utf8,${encodedCursor}') ${this.eraserSize/2} ${this.eraserSize/2}, auto`;
+    this.canvas.style.cursor = `url('data:image/svg+xml;utf8,${encodedCursor}') ${this.eraserSize.default/2} ${this.eraserSize.default/2}, auto`;
   }
 
   private setupEventListeners(): void {
@@ -85,6 +98,7 @@ export default class Eraser {
     this.canvas.addEventListener('mousemove', this.boundDraw);
     this.canvas.addEventListener('mouseup', this.boundStopDrawing);
     this.canvas.addEventListener('mouseleave', this.boundStopDrawing);
+    this.canvas.addEventListener('wheel', this.boundWheel);
   }
 
   /** 移除监听 */
@@ -93,6 +107,7 @@ export default class Eraser {
     this.canvas.removeEventListener('mousemove', this.boundDraw);
     this.canvas.removeEventListener('mouseup', this.boundStopDrawing);
     this.canvas.removeEventListener('mouseleave', this.boundStopDrawing);
+    this.canvas.removeEventListener('wheel', this.boundWheel);
   }
 
   private startDrawing(event: MouseEvent): void {
@@ -104,7 +119,7 @@ export default class Eraser {
     this.currentPath = [{
       x: this.lastX,
       y: this.lastY,
-      size: this.eraserSize,
+      size: this.eraserSize.default,
       color: this.defaultColor
     }];
   }
@@ -118,7 +133,7 @@ export default class Eraser {
     this.currentPath.push({
       x,
       y,
-      size: this.eraserSize,
+      size: this.eraserSize.default,
       color: this.defaultColor
     });
 
@@ -126,12 +141,12 @@ export default class Eraser {
     this.drawPath([{
       x: this.lastX,
       y: this.lastY,
-      size: this.eraserSize,
+      size: this.eraserSize.default,
       color: this.defaultColor
     }, {
       x,
       y,
-      size: this.eraserSize,
+      size: this.eraserSize.default,
       color: this.defaultColor
     }]);
 
@@ -180,9 +195,12 @@ export default class Eraser {
   }
 
   public setEraserSize(size: string | number): void {
-    this.eraserSize = parseInt(size as string);
+    this.eraserSize.default = parseInt(size as string);
     /** 更新光标大小 */
     this.updateCursor();
+    if (this.onEraserSizeChange) {
+      this.onEraserSizeChange(this.eraserSize.default);
+    }
   }
 
   public clearCanvas(): void {
@@ -294,6 +312,19 @@ export default class Eraser {
       const inverseColor = this.getInverseColor(dominantColor);
       this.defaultColor = `${inverseColor}80`; // 80 相当于 0.5 的透明度
       this.updateCursor();
+    }
+  }
+
+  /** 处理滚轮事件 */
+  private handleWheel(event: WheelEvent): void {
+    event.preventDefault();
+    const delta = event.deltaY;
+    // 根据滚轮方向调整橡皮擦大小
+    const sizeChange = delta > 0 ? -2 : 2;
+    const newSize = Math.max(this.eraserSize.min, Math.min(this.eraserSize.max, this.eraserSize.default + sizeChange));
+
+    if (newSize !== this.eraserSize.default && newSize >= this.eraserSize.min && newSize <= this.eraserSize.max) {
+      this.setEraserSize(newSize);
     }
   }
 }

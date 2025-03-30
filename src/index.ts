@@ -1,11 +1,11 @@
 /** 入口文件 */
-import styles from '@/assets/style.css?inline';
+import './assets/style.css';
 import AppTemplate from '@/templates/App';
-import { scopeStyles, scopeTemplate, generateScopeId } from '@/utils/utils';
-import type { IDomSize, ICropRatio, IDrawCanvasInfo, IImageMode } from '@/types/IType';
+import { scopeTemplate, generateScopeId } from '@/utils/utils';
+import type { IDomSize, ICropRatio, IDrawCanvasInfo, IImageMode, IPixproOptions } from '@/types/IType';
 import events from '@/utils/event';
 import { addClass, removeClass, setStyle, delay } from '@/utils/utils';
-import DragHandler from '@/utils/dragHandle';
+import DragHandler, { resetDragHandlerInstance } from '@/utils/dragHandle';
 import httpClient from './utils/CustomFetch';
 
 /** 超级像素 */
@@ -43,39 +43,31 @@ class PixPro {
   /** 请求 merchantId */
   public merchantId: string = '';
 
-  constructor(element: HTMLElement, options?: {
-    /** 步骤变化回调 */
-    onStepChange?: ({ stepList, currentStepIndex }: { stepList: IDrawCanvasInfo[], currentStepIndex: number }) => void
-    /** 导出图片回调 */
-    onExportImage?: (image: string) => void
-    /** 结束回调 */
-    onFinish?: () => void
-    /** 上传回调 */
-    onUpload?: () => void
-    /** 实时变化回调 */
-    realTimeChange?: (step: IDrawCanvasInfo) => void
-    /** 是否是开发模式 */
-    isDev?: boolean
-    /** 请求 token */
-    token: string
-    /** 请求 merchantId */
-    merchantId: string
-    /** 请求 host */
-    host: string
-    /** 请求 routes */
-    routes: string,
-    /** 请求 action */
+  private options: IPixproOptions = {
+    token: '',
+    merchantId: '',
+    host: '',
+    routes: '',
     action: {
-      extend: string
-      erase: string
-      removeBg: string
-      hd: string
+      extend: '',
+      erase: '',
+      removeBg: '',
+      hd: ''
     },
-  }) {
+    eraserSize: {
+      min: 2,
+      max: 100,
+      default: 20
+    }
+  }
+
+  constructor(element: HTMLElement, options?: IPixproOptions) {
     if (!element) {
       throw new Error('必须要传入一个容器！');
     }
     this.container = element;
+
+    this.options = { ...this.options, ...options }
     
     // 统一设置headers
     httpClient.setHeaderGetter('token', () => options?.token ?? '');
@@ -136,13 +128,14 @@ class PixPro {
     const { container } = this;
     const scopeId = generateScopeId();
 
-    /** 添加全局样式 */
-    const styleElement = document.createElement('style');
-    styleElement.textContent = scopeStyles(styles, scopeId);
-    document.head.appendChild(styleElement);
-
     /** 添加全局模板 */
     container.innerHTML = scopeTemplate(AppTemplate, scopeId);
+    
+    /** 添加 scopeId 属性到容器 */
+    const elements = container.querySelectorAll('.photo-studio-container');
+    elements.forEach(el => {
+      el.setAttribute('data-style-id', scopeId);
+    });
 
     this.fileInput = container.querySelector('#photo-studio-upload-input') as HTMLInputElement;
     this.mainFrame = container.querySelector('.photo-studio-container') as HTMLElement;
@@ -155,6 +148,55 @@ class PixPro {
     this.remindImageImg = this.container.querySelector('#remind-image canvas') as HTMLCanvasElement;
   }
 
+  /** 上传文件 */
+  public async uploadFile(file: File) {
+    /** 触发 onUpload 方法 */
+    this.onUpload && this.onUpload();
+    await delay(0);
+    this.getFrameSize();
+    const result = await events.init(file, this.options);
+
+    /** 隐藏上传 */
+    const uploadContainer = this.container.querySelector('.upload-container') as HTMLDivElement;
+    addClass(uploadContainer, 'hide');
+
+    /** 给提醒图片添加宽高 */
+    setStyle(this.remindImageDom as HTMLElement, {
+      width: `${result.styleWidth}px`,
+      height: `${result.styleHeight}px`
+    });
+    setStyle(this.remindImageImg as HTMLElement, {
+      width: `${result.styleWidth}px`,
+      height: `${result.styleHeight}px`
+    });
+    /** 给控制框体添加宽高 */
+    setStyle(this.controlDom as HTMLElement, {
+      width: `${result.styleWidth}px`,
+      height: `${result.styleHeight}px`
+    });
+
+    /** 给显示框体添加宽高 */
+    setStyle(this.previewDom as HTMLElement, {
+      width: `${result.styleWidth}px`,
+      height: `${result.styleHeight}px`
+    });
+    
+    setStyle(this.showImage as HTMLElement, {
+      width: `${result.styleWidth}px`,
+      height: `${result.styleHeight}px`
+    });
+
+    /** 给窗帘添加宽高 */
+    setStyle(this.previewCurtainDom as HTMLElement, {
+      width: `${result.styleWidth}px`,
+      height: `${result.styleHeight}px`
+    });
+
+    /** 显示预览 */
+    const previewControlContainer = this.container.querySelector('.preview-control-container') as HTMLDivElement;
+    removeClass(previewControlContainer, 'hide');
+  }
+
   /** 监听上传 */
   linstenerUpload() {
     const { fileInput } = this;
@@ -164,50 +206,7 @@ class PixPro {
     fileInput.addEventListener('change', async (event) => {
       const target = event.target as HTMLInputElement;
       if (target.files && target.files.length > 0) {
-        /** 触发 onUpload 方法 */
-        this.onUpload && this.onUpload();
-        await delay(0);
-        this.getFrameSize();
-        const file = target.files[0];
-        const result = await events.init(file);
-
-        /** 隐藏上传 */
-        addClass(document.querySelector('.upload-container') as HTMLDivElement, 'hide');
-
-        /** 给提醒图片添加宽高 */
-        setStyle(this.remindImageDom as HTMLElement, {
-          width: `${result.styleWidth}px`,
-          height: `${result.styleHeight}px`
-        });
-        setStyle(this.remindImageImg as HTMLElement, {
-          width: `${result.styleWidth}px`,
-          height: `${result.styleHeight}px`
-        });
-        /** 给控制框体添加宽高 */
-        setStyle(this.controlDom as HTMLElement, {
-          width: `${result.styleWidth}px`,
-          height: `${result.styleHeight}px`
-        });
-
-        /** 给显示框体添加宽高 */
-        setStyle(this.previewDom as HTMLElement, {
-          width: `${result.styleWidth}px`,
-          height: `${result.styleHeight}px`
-        });
-        
-        setStyle(this.showImage as HTMLElement, {
-          width: `${result.styleWidth}px`,
-          height: `${result.styleHeight}px`
-        });
-
-        /** 给窗帘添加宽高 */
-        setStyle(this.previewCurtainDom as HTMLElement, {
-          width: `${result.styleWidth}px`,
-          height: `${result.styleHeight}px`
-        });
-
-        /** 显示预览 */
-        removeClass(document.querySelector('.preview-control-container') as HTMLDivElement, 'hide');
+        this.uploadFile(target.files?.[0]);
       }
     });
   }
@@ -311,6 +310,11 @@ class PixPro {
     events.resetAll();
     /** 重置 DragHandler 实例 */
     resetDragHandlerInstance();
+  }
+
+  /** 下载图片 */
+  public async downloadImage() {
+    await events.downloadImage();
   }
 }
 

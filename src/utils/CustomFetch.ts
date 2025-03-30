@@ -1,3 +1,5 @@
+import { setTraceID } from "./traceId";
+
 class CustomFetch {
   private baseURL: string;
   private headerGetters: Map<string, () => string | null> = new Map();
@@ -12,6 +14,11 @@ class CustomFetch {
 
   public setHeaderGetter(headerName: string, callback: () => string | null) {
     this.headerGetters.set(headerName, callback);
+  }
+
+  /** 判断是否为本地环境 */
+  private isLocal() {
+    return ['192.168', 'localhost', '127.0.0.1'].filter(item => window.location.href.includes(item)).length > 0;
   }
 
   private getFullURL(path: string, params?: Record<string, any>): string {
@@ -70,7 +77,11 @@ class CustomFetch {
     const fullURL = this.getFullURL(path, params);
     const headers = new Headers(options.headers || {});
     headers.set('Content-Type', 'application/json');
-    
+    headers.set('Cms-TraceID', setTraceID());
+    if (this.isLocal()) {
+      headers.set('Api-Source', 'local');
+    }
+
     // 设置所有注册的headers
     this.headerGetters.forEach((getter, headerName) => {
       const value = getter();

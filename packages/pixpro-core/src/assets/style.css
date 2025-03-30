@@ -132,13 +132,12 @@
 }
 .control-container, .eraser-container {
   box-sizing: border-box;
-
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  border: 1px solid #e0e0e0;
+  border: 1.5px solid #c5c5c5;
   z-index: 3;
 }
 .eraser-container {
@@ -157,10 +156,13 @@ span.tl, span.tr, span.bl, span.br {
 }
 span.tl:before, span.tr:before, span.bl:before, span.br:before {
   content: '';
-  width: 14px;
-  height: 14px;
+  width: 10px;
+  height: 10px;
   background-color: #fff;
-  border: 1px solid #b5b4b4;
+  border: 1px solid #959595;
+}
+span.tl:hover:before, span.tr:hover:before, span.bl:hover:before, span.br:hover:before {
+  border-color: #868686;
 }
 span.tc, span.bc {
   width: calc(100% - 32px);

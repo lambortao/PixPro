@@ -222,3 +222,43 @@ export interface IPhotoStudio {
   hd: () => void;
   switchMode: (oldMode: IImageMode, newMode: IImageMode) => void;
 }
+
+export interface IEraserSize {
+  min: number
+  max: number
+  default: number
+}
+
+export interface IPixproOptions {
+  /** 步骤变化回调 */
+  onStepChange?: ({ stepList, currentStepIndex }: { stepList: IDrawCanvasInfo[], currentStepIndex: number }) => void
+  /** 导出图片回调 */
+  onExportImage?: (image: string) => void
+  /** 结束回调 */
+  onFinish?: () => void
+  /** 上传回调 */
+  onUpload?: () => void
+  /** 实时变化回调 */
+  realTimeChange?: (step: IDrawCanvasInfo) => void
+  /** 调节橡皮擦的回调 */
+  onEraserSizeChange?: (size: number) => void
+  /** 是否是开发模式 */
+  isDev?: boolean
+  /** 请求 token */
+  token: string
+  /** 请求 merchantId */
+  merchantId: string
+  /** 请求 host */
+  host: string
+  /** 请求 routes */
+  routes: string,
+  /** 请求 action */
+  action: {
+    extend: string
+    erase: string
+    removeBg: string
+    hd: string
+  },
+  /** 橡皮擦大小区间 */
+  eraserSize?: IEraserSize
+}

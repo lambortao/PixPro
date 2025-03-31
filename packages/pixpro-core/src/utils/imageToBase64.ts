@@ -20,10 +20,6 @@ export default (
     return;
   }
   let {
-    /** 源文件图片宽度 */
-    rawImgWidth,
-    /** 源文件图片高度 */
-    rawImgHeight,
     /** 源文件图片绘制 x 轴起点 */
     sx,
     /** 源文件图片绘制 y 轴起点 */
@@ -56,10 +52,6 @@ export default (
     scaleX,
     /** 缩放 y 轴 */
     scaleY,
-    /** 图片的比例 */
-    proportion,
-    /** 当前 canvas 与 DOM 的缩放比例 */
-    cdProportions,
     /** 方向 */
     direction,
     /** 翻转 */

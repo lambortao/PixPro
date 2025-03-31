@@ -1,9 +1,70 @@
-// 定义本地类型，不从外部导入
-/** 拖动抓手名称 */
-export type IDraggableGripper = 'tl' | 't' | 'tr' | 'l' | 'r' | 'bl' | 'b' | 'br' | 'body' | 'zoom';
+export const controlTextData = {
+  crop: {
+    btn: '裁切',
+    title: '裁切',
+    desc: '',
+    icon: 'crop-btn'
+  },
+  expand: {
+    btn: '扩图',
+    title: '扩图',
+    desc: '向外扩展图片，AI将填充图片以外的部分。',
+    icon: 'expand-btn'
+  },
+  erase: {
+    btn: '擦除',
+    title: '擦除',
+    desc: '涂抹想要从图片中擦除的区域',
+    icon: 'erase-btn'
+  },
+  'remove-bg': {
+    btn: '移除背景',
+    title: '移除背景',
+    desc: '一键抠出图片中的主体。',
+    icon: 'remove-bg-btn'
+  },
+  hd: {
+    btn: '提升解析度',
+    title: '提升解析度',
+    desc: '最大可提升至 3200 x 3200',
+    icon: 'hd-btn'
+  }
+}
 
-/** 裁剪比例类型 */
-export type ICropRatio = 'none' | 'original' | '1:1' | '3:4' | '4:3' | '9:16' | '16:9' | '1:2' | '2:1' | '2:3' | '3:2' | '4:5' | '5:4';
+export const cropControlData = {
+  original: 0,
+  '1:1': 1,
+  '4:3': 4 / 3,
+  '16:9': 16 / 9,
+  '9:16': 9 / 16
+}
+
+/** 颜色列表 */
+export const colorListData = [
+  'transparent',
+  '#ffffff',
+  '#e3e9ef',
+  '#dbe9fd',
+  '#afc5c1',
+  '#a2e1c9',
+  '#4067c5',
+  '#0b209f',
+  '#4041c3',
+  '#27297e',
+  '#5a335f',
+  '#d74f3c',
+  '#ebaacb',
+  '#fbe8e3',
+  '#f3e48b',
+  '#ccef7a',
+  '#75c097',
+  '#62b6b0',
+  '#6de9b0',
+  '#83c8df'
+]
+
+/** 拖拽的把手 */
+export type IDraggableGripper = 'tl' | 't' | 'tr' | 'l' | 'r' | 'bl' | 'b' | 'br' | 'body' | 'zoom';
 
 /** 橡皮擦默认大小 */
 export const DEFAULT_ERASER_SIZE = 50;
@@ -75,34 +136,3 @@ export const SCALE_GRANULARITY = 0.08;
 
 /** 拖动的抓手合集 */
 export const DRAG_GRIPPER_NAME: IDraggableGripper[] = ['tl', 't', 'tr', 'l', 'r', 'bl', 'b', 'br', 'zoom'];
-
-/** 拖动的抓手样式 */
-export const DRAG_GRIPPER_STYLE: Record<IDraggableGripper, string[]> = {
-  tl: ['bottom', 'right'],
-  t: ['bottom', 'left'],
-  tr: ['bottom', 'left'],
-  l: ['top', 'right'],
-  r: ['top', 'left'],
-  bl: ['top', 'right'],
-  b: ['top', 'left'],
-  br: ['top', 'left'],
-  body: ['top', 'left'],
-  zoom: ['top', 'left']
-};
-
-/** 裁剪比例 */
-export const CROP_RATIO: Record<ICropRatio, number | null> = {
-  none: null,
-  original: 0,
-  '1:1': 1,
-  '3:4': 3 / 4,
-  '4:3': 4 / 3,
-  '9:16': 9 / 16,
-  '16:9': 16 / 9,
-  '1:2': 1 / 2,
-  '2:1': 2 / 1,
-  '2:3': 2 / 3,
-  '3:2': 3 / 2,
-  '4:5': 4 / 5,
-  '5:4': 5 / 4,
-};

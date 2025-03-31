@@ -20,7 +20,7 @@ import { SILENT_IMAGE_QUALITY } from '../config/constants';
  */
 export default (hasBgColor: boolean = false, step: IDrawCanvasInfo, image: ICompressResult) => {
   /** 获取当前步骤的所有参数 */
-  const {
+  let {
     rotate = 0,           // 自由旋转角度
     flipX = 1,            // 水平翻转系数(1:不翻转, -1:翻转)
     flipY = 1,            // 垂直翻转系数(1:不翻转, -1:翻转)
@@ -34,23 +34,30 @@ export default (hasBgColor: boolean = false, step: IDrawCanvasInfo, image: IComp
     turn = 0,             // 90度整数倍旋转次数(0-3)
     rawImgWidth,          // 原始图片宽度
     rawImgHeight,         // 原始图片高度
-    bgColor               // 背景颜色
+    bgColor,               // 背景颜色
+    mode = 'crop'      // 导出模式
   } = { ...step };
 
   if (!image.base64) {
     throw new Error('图片数据丢失');
   }
 
+  /** 扩展模式下需要忽略偏移量 */
+  if (mode === 'expand') {
+    xDomOffset = 0;
+    yDomOffset = 0;
+  }
+
   /** 确定图片格式(png或jpeg) */
   const imageType = image.base64.includes('data:image/png;base64,') ? 'png' : 'jpeg';
   
-  // 创建临时图片对象用于加载原始图像
+  /** 创建临时图片对象用于加载原始图像 */
   const tempImage = new Image();
   
   return new Promise<string>((resolve, reject) => {
     tempImage.onload = () => {
       try {
-        // 创建一个工作画布，用于应用所有变换
+        /** 创建一个工作画布，用于应用所有变换 */
         const workCanvas = document.createElement('canvas');
         const workCtx = workCanvas.getContext('2d');
         
@@ -58,24 +65,24 @@ export default (hasBgColor: boolean = false, step: IDrawCanvasInfo, image: IComp
           throw new Error('无法获取画布上下文');
         }
         
-        // 设置初始画布尺寸为原始图像尺寸
+        /** 设置初始画布尺寸为原始图像尺寸 */
         workCanvas.width = rawImgWidth;
         workCanvas.height = rawImgHeight;
         
-        // 绘制原始图像
+        /** 绘制原始图像 */
         workCtx.drawImage(tempImage, 0, 0, rawImgWidth, rawImgHeight);
         
-        // 计算需要的画布尺寸
-        // 如果有90度或270度旋转，宽高需要互换
+        /** 计算需要的画布尺寸 */
         let finalWidth = rawImgWidth;
         let finalHeight = rawImgHeight;
         
-        if (turn % 2 === 1) { // 90°或270°
+        /** 如果有90度或270度旋转，宽高需要互换 */
+        if (turn % 2 === 1) {
           finalWidth = rawImgHeight;
           finalHeight = rawImgWidth;
         }
         
-        // 创建变换画布
+        /** 创建变换画布 */
         const transformedCanvas = document.createElement('canvas');
         transformedCanvas.width = finalWidth;
         transformedCanvas.height = finalHeight;
@@ -85,20 +92,20 @@ export default (hasBgColor: boolean = false, step: IDrawCanvasInfo, image: IComp
           throw new Error('无法获取变换画布上下文');
         }
         
-        // 关键改进: 根据旋转角度调整镜像应用方式
+        /** 根据旋转角度调整镜像应用方式，因为旋转后镜像的轴会发生变化 */
         transformedCtx.save();
         transformedCtx.translate(transformedCanvas.width / 2, transformedCanvas.height / 2);
         
-        // 先应用旋转
+        /** 先应用旋转 */
         if (turn !== 0) {
           transformedCtx.rotate((turn * 90 * Math.PI) / 180);
         }
         
-        // 根据旋转角度调整镜像的应用
+        /** 根据旋转角度调整镜像的应用 */
         let adjustedFlipX = flipX;
         let adjustedFlipY = flipY;
         
-        // 关键逻辑: 根据旋转角度调整镜像方向
+        /** 关键逻辑: 根据旋转角度调整镜像方向 */
         if (turn === 1) { // 90度
           // 交换X和Y，Y变为-X
           adjustedFlipX = flipY;

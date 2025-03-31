@@ -1,3 +1,4 @@
+<!-- pixpro-vue 的入口文件 -->
 <template>
   <pix-pro-skin
     v-model:width="width"
@@ -5,16 +6,20 @@
     v-model:img-current-width="imgCurrentWidth"
     v-model:img-current-height="imgCurrentHeight"
     v-model:loading="nowLoading"
+    v-model:eraser-default-size="eraserDefaultSize"
     :crop-ratios="cropRatios"
     :step-index="nowStepIndex"
     :step-list="nowStepList"
     :real-time-step="realTimeStep"
     :aiLoading="aiLoading"
+    :button-loading="buttonLoading"
+    :show-download-btn="showDownloadBtn"
     :disabled-form="disabledForm"
     :is-operate="isOperate"
+    :eraser-size="eraserSize"
     @rollback="rollback"
     @forward="forward"
-    @reset="reset"
+    @reset="reset" 
     @flip="flip"
     @crop-ratio="handleCropRatio"
     @turn="turn"
@@ -28,6 +33,7 @@
     @switch-mode="switchMode"
     @hd="handleHd"
     @handle-close="close"
+    @handle-download-image="handleDownloadImage"
     @handleSizeChange="handleSizeChange"
   >
     <div class="container" ref="photoStudioContainer" />
@@ -40,72 +46,65 @@
 <script setup lang="ts">
 import { onMounted, ref, nextTick } from 'vue';
 import PixProSkin from './PixProSkin/index.vue';
-import PhotoStudio, { type IDrawCanvasInfo, type IImageMode } from '@pixpro/core';
+import PhotoStudio, { type ICropRatio, type IDrawCanvasInfo, type IImageMode } from '@pixpro/core';
 
-const props = defineProps({
-  // 配置项
-  config: {
-    type: Object,
-    default: () => ({})
-  },
-  token: {
-    type: String,
-    required: true
-  },
-  host: {
-    type: String,
-    required: true
-  },
-  routes: {
-    type: String,
-    default: '/image/processing'
-  },
-  action: {
-    type: Object,
-    default: () => ({
-      extend: 'ImageExpansion',
-      erase: 'LocalizedImageRemoval',
-      removeBg: 'BackgroundRemoval',
-      hd: 'EnhanceImageResolution'
-    })
-  },
-  cropRatios: {
-    type: Object,
-    default: () => ({
-      original: 0,
-      '1:1': 1,
-      '4:3': 4/3,
-      '16:9': 16/9,
-      '9:16': 9/16
-    })
+const photoStudioContainer = ref<HTMLElement | null>(null);
+
+const imageStudio = ref<PhotoStudio | null>(null);
+
+const nowLoading = ref(false);
+
+const props = defineProps<{
+  /** 用户 token */
+  token: string
+  /** 请求 host */
+  host: string
+  /** 裁剪比例 */
+  cropRatios?: Record<string, number>
+  /** 初始图片 */
+  fitstImage?: File | null
+  /** 开启下载按钮 */
+  showDownloadBtn?: boolean
+  /** 请求 routes */
+  routes?: string
+  /** 橡皮擦大小 */
+  eraserSize?: {
+    min: number
+    max: number
+    default: number
   }
-});
+}>()
+
 const emits = defineEmits<{
   (e: 'handle-close'): void
   (e: 'handle-export-image', image: string): void
 }>()
 
-const photoStudioContainer = ref<HTMLElement | null>(null);
-const imageStudio = ref<PhotoStudio | null>(null);
-const nowLoading = ref(false);
-const aiLoading = ref(false);
-const disabledForm = ref(false);
+/** 是否进入操作状态 */
 const isOperate = ref(false);
-const imageSrc = ref('');
 
 const nowStep = ref<IDrawCanvasInfo | null>(null);
-// 数据存储
-const nowStepIndex = ref(0);
+
 const nowStepList = ref<IDrawCanvasInfo[]>([]);
 const realTimeStep = ref<IDrawCanvasInfo | null>(null);
-
-// 尺寸信息
+const nowStepIndex = ref(-1);
 const width = ref(0);
 const height = ref(0);
+
+/** 图片的原图宽高 */
 const imgCurrentWidth = ref(0);
 const imgCurrentHeight = ref(0);
 
 const direction = ref<'vertical' | 'horizontal' | null>(null);
+
+const cropRatio = ref<ICropRatio | null>(null);
+
+const aiLoading = ref(false);
+const disabledForm = ref(false);
+const buttonLoading = ref(false);
+
+const nowMode = ref<string>('crop');
+
 
 /**
  * 获取实时的宽高
@@ -119,6 +118,15 @@ const direction = ref<'vertical' | 'horizontal' | null>(null);
   }
 }
 
+const eraserSize = ref(props.eraserSize ?? {
+  min: 20,
+  max: 100,
+  default: 50
+})
+
+const defaultEraserSize = ref(eraserSize.value.default)
+
+
 /** 是否已经初始化 */
 const isInit = ref(false);
 /** 初始化 */
@@ -127,8 +135,9 @@ function initImageStudio() {
     token: props.token,
     merchantId: '',
     isDev: false,
-    host: '/api',
-    routes: '/image/processing',
+    host: props.host,
+    routes: props.routes ?? '/image/processing',
+    eraserSize: eraserSize.value,
     action: {
       extend: 'ImageExpansion',
       erase: 'LocalizedImageRemoval',
@@ -160,6 +169,7 @@ function initImageStudio() {
       imgCurrentHeight.value = step.currentDomHeight / (step.cdProportions ?? 1);
       nextTick(() => {
         aiLoading.value = false;
+        nowLoading.value = false;
         disabledForm.value = step.disabledForm ?? false;
       })
     },
@@ -179,18 +189,18 @@ function initImageStudio() {
     onUpload: () => {
       nowLoading.value = true;
       isOperate.value = true;
+    },
+    onEraserSizeChange: (size: number) => {
+      eraserSize.value.default = size;
+      defaultEraserSize.value = size;
     }
   });
 }
 
-onMounted(() => {
-  initImageStudio()
-});
-
 /**
  * 触发比例裁剪，在 mounted 的时候自动触发，如果发现当前只传了一组比例数据则自动调用 handleCropRatio 方法，否则忽略
  */
- function triggerCropRatio() {
+function triggerCropRatio() {
   if (props.cropRatios && Object.keys(props.cropRatios).length === 1) {
     const ratio = props.cropRatios[Object.keys(props.cropRatios)[0]];
     console.log('触发比例裁剪', ratio, Object.keys(props.cropRatios)[0])
@@ -198,6 +208,17 @@ onMounted(() => {
   }
 }
 
+
+onMounted(() => {
+  initImageStudio()
+  nextTick(() => {
+    if (props.fitstImage) {
+      imageStudio.value?.uploadFile(props.fitstImage)
+    }
+  })
+});
+
+const imageSrc = ref('');
 
 const handleSizeChange = (direction: 'width' | 'height') => {
   imageStudio.value?.setWidthAndHeight(width.value, height.value, direction);
@@ -277,14 +298,20 @@ const handleHd = () => {
   imageStudio.value?.hd();
 };
 
+const handleDownloadImage = async () => {
+  buttonLoading.value = true;
+  await imageStudio.value?.downloadImage();
+  buttonLoading.value = false;
+}
+
 const switchMode = ({ oldMode, newMode }: { oldMode: string, newMode: string }) => {
   if (oldMode === newMode) return
   console.log('切换模式', oldMode, newMode)
+  nowMode.value = newMode
   imageStudio.value?.switchMode(oldMode as IImageMode, newMode as IImageMode);
-  aiLoading.value = true;
+  nowLoading.value = true;
 };
 </script>
-
 <style scoped>
 body {
   margin: 0;
@@ -317,4 +344,4 @@ body {
   max-width: 80%;
   max-height: 80%;
 }
-</style> 
+</style>

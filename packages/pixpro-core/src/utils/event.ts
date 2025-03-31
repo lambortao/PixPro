@@ -13,10 +13,11 @@ import type {
   IImageMode,
   IDomSize,
   IDrawCanvasInfo,
-  ICropRatio,
+  IPixproOptions,
   ICompressResult,
   IDraggableGripper,
-  IErasePoints
+  IErasePoints,
+  IEraserSize
 } from '@/types/IType';
 import {
   calculateDimensions,
@@ -33,13 +34,11 @@ import {
   getWidthForHeigth,
   getHeightForWidth,
   getNewWHXYData,
-  calculateExpandBoxWH,
   calculateExpandBoxUniversal
 } from './utils';
 import {
   CANVAS_RENDER_MIN_HEIGHT,
   CANVAS_RENDER_MIN_WIDTH,
-  CROP_RATIO,
   THROTTLE_TIME,
   SILENT_IMAGE_QUALITY,
   DEFAULT_RESULT_FORMAT,
@@ -88,9 +87,19 @@ class Renderer {
   public defaultImage: File | null = null;
   /** 是否导出原图 */
   public isExportOriginal: boolean = true;
+  
+  /** 橡皮擦大小 */
+  public eraserSize: IEraserSize = {
+    min: 2,
+    max: 100,
+    default: 20
+  }
+
+  /** 橡皮擦大小回调 */
+  private onEraserSizeChange: ((size: number) => void) | undefined = undefined;
 
   /** 请求 host */
-  private host: string = '';
+  // private host: string = '';
   /** 请求 routes */
   private routes: string = '';
   /** 请求 action */
@@ -120,7 +129,7 @@ class Renderer {
   private rawDomSize: IDomSize | null = null;
 
   /** 图片的原比例 */
-  private originalRatio = { vertical: 0, horizontal: 0 };
+  // private originalRatio = { vertical: 0, horizontal: 0 };
 
   /** 需要移动 x 轴偏移量的把手 */
   private dragGripperX: IDraggableGripper[] = ['l', 'bl', 'tl'];
@@ -164,21 +173,27 @@ class Renderer {
     removeBg: string
     hd: string
   }) {
-    this.host = host;
+    // this.host = host;
     this.routes = routes;
     this.action = action;
-    
+
     // 更新 httpClient 的 baseURL
     httpClient.setBaseURL(host);
   }
 
   /** 图片初始上传的初始化 */
-  public async init(file: File): Promise<{
+  public async init(file: File, options: IPixproOptions): Promise<{
     styleHeight: number;
     styleWidth: number;
   }> {
     if (!file) {
       throw new Error('图片不能为空');
+    }
+    if (options.eraserSize) {
+      this.eraserSize = { ...options.eraserSize }
+    }
+    if (options.onEraserSizeChange) {
+      this.onEraserSizeChange = options.onEraserSizeChange;
     }
     /** 实例化 DOM 元素 */
     this.showImageBox = this.showImageBox ?? document.querySelector('#container-canvas') as HTMLSpanElement;
@@ -197,7 +212,7 @@ class Renderer {
       /** 保存原始图片 */
       const nowImageId = uuidv4();
       this.imagesList[nowImageId] = image;
-  
+      console.log(this.imagesList, 'this.imagesList')
       return this.renderImage(nowImageId);
       
     } catch (error) {
@@ -248,7 +263,6 @@ class Renderer {
     } = calculateDimensions(this.rawDomSize!, image.width, image.height);
     /** 计算 canvas 画布与 DOM 的缩放比例 */
     this.proportions = round(styleWidth / canvasWidth);
-    console.log('this.proportions', styleWidth, canvasWidth, canvasHeight)
 
     /** 计算原图与 canvas 的缩放比例 */
     const imageToCanvasRatio = round(image.width / canvasWidth);
@@ -260,10 +274,10 @@ class Renderer {
     const rawAspectRatio = round(image.width / image.height);
 
     /** 计算原图的比例 */
-    this.originalRatio = {
-      vertical: round(canvasHeight / canvasWidth),
-      horizontal: round(canvasWidth / canvasHeight)
-    };
+    // this.originalRatio = {
+    //   vertical: round(canvasHeight / canvasWidth),
+    //   horizontal: round(canvasWidth / canvasHeight)
+    // };
 
     const minWidth = CANVAS_RENDER_MIN_WIDTH * this.proportions
     const minHeight = CANVAS_RENDER_MIN_HEIGHT * this.proportions
@@ -306,6 +320,7 @@ class Renderer {
       rotateY: undefined,
       flipX: 1,
       flipY: 1,
+      scale: 1,
       scaleX: 1,
       scaleY: 1,
       cdProportions: this.proportions,
@@ -352,6 +367,7 @@ class Renderer {
   public async renderImageToCanvas(step: IDrawCanvasInfo, turn: number = 0) {
     const nowImages = this.imagesList[step.imgId];
     const tempImage = new Image();
+    console.log('nowImages', nowImages)
 
     await new Promise((resolve) => {
       tempImage.onload = resolve;
@@ -799,6 +815,7 @@ class Renderer {
 
   /** 按比例裁剪 */
   public cropRatio({ ratio, label, isTrigger = true }: { ratio: number | null, label: string, isTrigger?: boolean }) {
+    console.log('cropRatio', ratio, isTrigger)
     const nowStep = { ...this.getNowStep() };
     const fromRatio = nowStep.cropRationLabel ?? 'none'
 
@@ -965,11 +982,7 @@ class Renderer {
     /** 计算旋转后需要的尺寸 */
     const {
       scale,
-      transformOrigin,
-      rotatedRectSize,
-      offset,
-      newWidth,
-      newHeight,
+      transformOrigin
     } = calculateCropTransform(
       { width: nowStep.currentDomWidth, height: nowStep.currentDomHeight },
       { width: nowStep.cropBoxWidth, height: nowStep.cropBoxHeight },
@@ -990,7 +1003,6 @@ class Renderer {
     // nowStep.yCropOffset = cropOffset.offsetY
     /** 设置缩放比例 */
     nowStep.scale = round(scale);
-    console.log('旋转', rotatedRectSize, offset, newWidth, newHeight)
     
 
     this.setNowStepDom(nowStep);
@@ -1039,19 +1051,16 @@ class Renderer {
   }
 
   /** 图片切片，该方法会返回最新的图片 ID */
-  public async imageSlice(w?: number, h?: number, hasBgColor: boolean = false) {
-    const nowStep = { ...this.getNowStep() };
+  public async imageSlice(hasBgColor: boolean = false) {
     const uuid = uuidv4()
-    const nowBL = nowStep.rawImgWidth / nowStep.currentDomWidth
-    w = w ?? round(nowStep.cropBoxWidth * nowBL, 0)
-    h = h ?? round(nowStep.cropBoxHeight * nowBL, 0)
     const image = await this.exportImage(hasBgColor);
     const nowimage = await compressImage(image, { quality: SILENT_IMAGE_QUALITY });
     this.imagesList[uuid] = {
       'base64': nowimage.base64,
-      'width': w,
-      'height': h
+      'width': nowimage.width,
+      'height': nowimage.height
     };
+    console.log('新增图片', this.imagesList, uuid)
     return uuid
   }
 
@@ -1080,6 +1089,8 @@ class Renderer {
       const nowImgId = await this.imageSlice()
       nowStep.imgId = nowImgId
       hasRenderCanvas = true
+      nowStep.scale = 1
+      nowStep.rotate = 0
       /** 重置图片的大小与图片的偏移量 */
       nowStep = this.leaveCropStep(nowStep)
       console.log('离开裁切步骤', nowStep)
@@ -1108,7 +1119,7 @@ class Renderer {
     /** 从移除背景切换到其他模式 */
     if (fromMode === 'remove-bg') {
       /** 裁切目前的图片 */
-      const nowImgId = await this.imageSlice(undefined, undefined, true)
+      const nowImgId = await this.imageSlice(true)
       nowStep.imgId = nowImgId
       hasRenderCanvas = true
       nowStep.bgColor = 'transparent'
@@ -1163,6 +1174,8 @@ class Renderer {
     step.yCropOffset = 0
     step.moveX = 0
     step.moveY = 0
+    // step.scale = 1
+    // step.rotate = 0
     step.zoom = 1
     step.turn = 0
     step.flipX = 1
@@ -1195,7 +1208,6 @@ class Renderer {
     /** 获取裁切框的最大允许宽高 */
     const maxWidth = this.rawDomSize!.width / 3
     const maxHeight = this.rawDomSize!.height / 3
-    console.log(this.rawDomSize, 'rawDomSize', maxWidth, maxHeight)
 
     /**
      * 如果裁切框的最大宽高都大于允许的最大宽高，计算的底层逻辑是：按比例缩放 cropBoxWidth 和 cropBoxHeight 到最大允许的宽高，
@@ -1348,6 +1360,20 @@ class Renderer {
     console.log('扩图模式，原图的最大宽高为：', newImgWidth, newImgHeight)
   }
 
+  /** 下载图片 */
+  public async downloadImage() {
+    const base64 = await this.exportImage(true)
+
+    const link = document.createElement('a');
+    link.href = base64;
+    link.download = 'pixpro-image.png';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    return base64
+  }
+
   /** 扩图 */
   public expandImage(nowStep: IDrawCanvasInfo, hasProportions = true) {
     /** 显示操作框 */
@@ -1425,6 +1451,11 @@ class Renderer {
     let newStep = { ...this.getNowStep() }
     newStep.rawImgHeight = newImage.height
     newStep.rawImgWidth = newImage.width
+
+    /** 如果是擦除，则需要将擦除重新计算 */
+    if (type === 'erase') {
+      newStep.erasePoints = []
+    }
     
     /** 计算新的解析度 */
     const {
@@ -1530,6 +1561,7 @@ class Renderer {
         this.handleStepList(newStep);
       });
     } else {
+      console.log('API 后新增步骤', type, newStep)
       newStep.imgId = newImgUuid;
       await this.handleStepGroup(newStep, true);
       this.handleStepList(newStep);
@@ -1549,13 +1581,12 @@ class Renderer {
     nowStep.mode = 'erase'
 
     if (this.eraser) {
-      console.log('初始化擦除功能', nowStep.erasePoints)
+      console.log('初始化擦除功能，有擦除功能', nowStep.erasePoints)
       this.eraser!.redraw(nowStep.erasePoints || [])
     } else {
-      console.log('初始化擦除功能', nowStep.erasePoints)
+      console.log('初始化擦除功能，没有擦除功能', nowStep.erasePoints)
       this.eraser = new Eraser(
         this.eraserCanvas as HTMLCanvasElement,
-        nowStep.eraserSize ?? DEFAULT_ERASER_SIZE,
         nowStep.currentDomWidth,
         nowStep.currentDomHeight,
         `${nowStep.currentDomWidth}px`,
@@ -1564,23 +1595,27 @@ class Renderer {
         (points) => {
           this.onEraseEnd(points)
         },
-        this.remindImageImg as HTMLCanvasElement
+        this.remindImageImg as HTMLCanvasElement,
+        this.eraserSize,
+        this.onEraserSizeChange
       );
     }
     
-
     removeClass(this.eraserContainerDom as HTMLElement, 'hide');
     return nowStep
   }
 
   /** 一键擦除 API */
   public async eraseImage () {
-    const imgId = await this.imageSlice(undefined, undefined, true)
+    const { imgId } = { ...this.getNowStep() }
     const nowImg = this.imagesList[imgId]
+    console.log(this.imagesList, 'this.imagesLis', imgId)
+    const width = Math.round(nowImg.width);
+    const height = Math.round(nowImg.height);
     const grayBase64 = canvasToGrayBase64(
       this.eraserCanvas as HTMLCanvasElement,
-      nowImg.width,
-      nowImg.height,
+      width,
+      height,
       false
     );
     try {
@@ -1594,7 +1629,7 @@ class Renderer {
       });
       this.eraser?.clearCanvas()
       if (result.code === 0) {
-        this.handleResult(result.data.image)
+        this.handleResult(result.data.image, 'erase')
       } else {
         alert(result?.msg || '操作失败！')
         this.onFinish && this.onFinish()
@@ -1725,7 +1760,7 @@ class Renderer {
     this.defaultImage = null;
     this.isExportOriginal = true;
     this.rawDomSize = null;
-    this.originalRatio = { vertical: 0, horizontal: 0 };
+    // this.originalRatio = { vertical: 0, horizontal: 0 };
     this.isDragCropBox = true;
 
     /** 重置回调函数 */

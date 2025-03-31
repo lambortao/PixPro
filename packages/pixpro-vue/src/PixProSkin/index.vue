@@ -447,7 +447,7 @@ const expandImageBtnStatus = computed(() =>
 const resetBtnDisabled = computed(() => currentStepIndex.value < 1);
 
 /** 禁用前进按钮 */
-const forwardBtnDisabled = computed(() => currentStepIndex.value >= props.stepList.length - 1);
+const forwardBtnDisabled = computed(() => currentStepIndex.value >= props.stepList?.length - 1);
 
 const emit = defineEmits([
   'handle-close',
@@ -632,4 +632,3 @@ function getRatioStyle(ratio: number): Record<string, string> {
   }
 }
 </style>
-

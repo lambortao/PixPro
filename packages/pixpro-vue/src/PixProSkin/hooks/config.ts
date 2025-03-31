@@ -14,7 +14,7 @@ export const controlTextData = {
   erase: {
     btn: '擦除',
     title: '擦除',
-    desc: '选取想要从图片中移除的物件。',
+    desc: '涂抹想要从图片中擦除的区域',
     icon: 'erase-btn'
   },
   'remove-bg': {
@@ -28,12 +28,6 @@ export const controlTextData = {
     title: '提升解析度',
     desc: '最大可提升至 3200 x 3200',
     icon: 'hd-btn'
-  },
-  compress: {
-    btn: '压缩容量',
-    title: '压缩容量',
-    desc: '在保证图片质量的基础上，有效降低图片的容量。',
-    icon: 'compress-btn'
   }
 }
 

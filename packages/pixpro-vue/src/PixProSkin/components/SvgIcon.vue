@@ -25,7 +25,7 @@ const svgContent = ref('');
 // 动态加载 SVG 并设置颜色
 const loadSvg = async () => {
   try {
-    const svg = await import(`./icon/${props.name}.svg?raw`);
+    const svg = await import(`../assets/icon/${props.name}.svg?raw`);
     let svgText = svg.default;
 
     // 如果传入了 color，动态设置 fill 或 stroke

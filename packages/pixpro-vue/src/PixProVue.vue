@@ -6,7 +6,7 @@
     v-model:img-current-width="imgCurrentWidth"
     v-model:img-current-height="imgCurrentHeight"
     v-model:loading="nowLoading"
-    v-model:eraser-default-size="eraserDefaultSize"
+    v-model:eraser-default-size="defaultEraserSize"
     :crop-ratios="cropRatios"
     :step-index="nowStepIndex"
     :step-list="nowStepList"
@@ -17,6 +17,7 @@
     :disabled-form="disabledForm"
     :is-operate="isOperate"
     :eraser-size="eraserSize"
+    :now-mode="nowMode"
     @rollback="rollback"
     @forward="forward"
     @reset="reset" 
@@ -44,7 +45,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, nextTick } from 'vue';
+import { onMounted, ref, nextTick, watch } from 'vue';
 import PixProSkin from './PixProSkin/index.vue';
 import PhotoStudio, { type ICropRatio, type IDrawCanvasInfo, type IImageMode } from '@pixpro/core';
 

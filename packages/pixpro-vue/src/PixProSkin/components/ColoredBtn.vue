@@ -32,7 +32,7 @@ const handleClick = () => {
 </script>
   
 <style scoped lang='less'>
-@import './_constant.less';
+@import '../assets/style/_constant.less';
 button {
   margin: 20px auto;
   width: 128px;

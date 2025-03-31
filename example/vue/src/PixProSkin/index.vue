@@ -1,13 +1,14 @@
 <template>
   <main class="editor-main">
     <div class="pix-pro-container">
-      <button title="关闭" class="close-btn close" @click="handleClose">
+      <button v-if="false" title="关闭" class="close-btn close" @click="handleClose">
         <svg-icon name="close" />
       </button>
 
       <!-- 侧边栏 -->
       <nav>
         <menu :class="{ disabled: !controlsShow || controlLoading }">
+          <span class="menu-bg" :style="menuBgStyle"></span>
           <div v-for="(value, key) in controlText" :key="key" @click="switchTab(key)"
             :class="{ active: activeTab === key }">
             <svg-icon :name="value.icon" />
@@ -28,6 +29,7 @@
         <div class="control-content">
           <div class="crop" v-if="activeTab === 'crop' || activeTab === 'expand'">
             <div class="section" v-if="showCropRatios">
+              <div class="ratio-bg" :style="ratioBgStyle"></div>
               <div
                 v-for="(item, key) in cropRatios"
                 class="icon-btn"
@@ -79,22 +81,28 @@
               <colored-btn
                 @click="handleExpandImage"
                 :loading="aiLoading"
-                text="扩展图片"
-                :disabled="expandImageBtnStatus || controlLoading || !allowExpand"
+                text="一键扩展"
+                :disabled="expandImageBtnStatus || controlLoading || tooSmallExpand || tooLargeExpand"
               />
-              <small v-if="!allowExpand">原图图片分辨率需大于 {{ MIN_EXPAND_IMAGE_WIDTH }} x {{ MIN_EXPAND_IMAGE_HEIGHT }} 且小于 {{ MAX_EXPAND_IMAGE_WIDTH }} x {{ MAX_EXPAND_IMAGE_HEIGHT }} 才能扩图。</small>
+              <p class="error-text" v-if="tooSmallExpand">图片分辨率需大于 {{ MIN_EXPAND_IMAGE_WIDTH }} x {{ MIN_EXPAND_IMAGE_HEIGHT }} </p>
+              <p class="error-text" v-if="tooLargeExpand">图片分辨率需小于 {{ MAX_EXPAND_IMAGE_WIDTH }} x {{ MAX_EXPAND_IMAGE_HEIGHT }} </p>
             </div>
           </div>
           <div class="erase" v-if="activeTab === 'erase'">
             <div class="section">
-              <EraserSizeSlider v-model:size="eraserSize" />
+              <EraserSizeSlider
+                v-model:size="eraserDefaultSize"
+                :min="eraserSize.min"
+                :max="eraserSize.max"
+              />
               <colored-btn
-                text="清除物件"
+                text="一键擦除"
                 :loading="aiLoading"
-                :disabled="!eraseImageBtnDisabled || !allowErase"
+                :disabled="!eraseImageBtnDisabled || tooSmallErase || tooLargeErase"
                 @click="handleErase"
               />
-              <small v-if="!allowErase">图片分辨率需大于 {{ MIN_ERASE_IMAGE_WIDTH }} x {{ MIN_ERASE_IMAGE_HEIGHT }} 且小于 {{ MAX_ERASE_IMAGE_WIDTH }} x {{ MAX_ERASE_IMAGE_HEIGHT }} 才能擦除。</small>
+              <p class="error-text" v-if="tooSmallErase">图片分辨率需大于 {{ MIN_ERASE_IMAGE_WIDTH }} x {{ MIN_ERASE_IMAGE_HEIGHT }} </p>
+              <p class="error-text" v-if="tooLargeErase">图片分辨率需小于 {{ MAX_ERASE_IMAGE_WIDTH }} x {{ MAX_ERASE_IMAGE_HEIGHT }} </p>
             </div>
           </div>
           <div v-if="activeTab === 'remove-bg'" class="remove-bg">
@@ -102,28 +110,42 @@
               <colored-btn
                 @click="handleRemoveBg"
                 :loading="aiLoading"
-                :disabled="!allowRemoveBg"
+                :disabled="tooSmallRemoveBg || tooLargeRemoveBg"
                 text="一键移除"
               />
-              <small v-if="!allowRemoveBg">宽低于 {{ MIN_REMOVE_BG_WIDTH }}px 或高低于 {{ MIN_REMOVE_BG_HEIGHT }}px，无法一键移除背景。</small>
+              <p class="error-text" v-if="tooSmallRemoveBg">图片分辨率需大于 {{ MIN_REMOVE_BG_WIDTH }} x {{ MIN_REMOVE_BG_HEIGHT }} </p>
+              <p class="error-text" v-if="tooLargeRemoveBg">图片分辨率需小于 {{ MAX_REMOVE_BG_WIDTH }} x {{ MAX_REMOVE_BG_HEIGHT }} </p>
               <span class="line"></span>
               <div class="color-list">
                 <small>背景颜色</small>
                 <div class="color-box">
                   <div
-                    v-for="item in colorList"
+                    v-for="item in allColorsList"
                     :class="[{ 'color-item': true, active: item === currentColor }, { 'transparent': item === 'transparent' }]"
                     :key="item"
                     @click="handleColorChange(item)"
-                  ><span :style="{ backgroundColor: item }"></span></div>
+                  >
+                    <span :style="{ backgroundColor: item }"></span>
+                    <svg-icon 
+                      v-if="localColorList.includes(item) && item !== currentColor"
+                      class="close-icon"
+                      name="close"
+                      @click.stop="removeLocalColorStorage(item)"
+                    />
+                  </div>
+                  <add-new-color
+                    v-model:visible="colorBoxVisible"
+                    @confirm="handleAddNewColor"
+                  />
                 </div>
               </div>
             </div>
           </div>
           <div v-if="activeTab === 'hd'" class="hd">
             <div class="section">
-              <colored-btn @click="handleHd" :loading="aiLoading" text="一键提升" :disabled="!allowHd" />
-              <small v-if="!allowHd">图片分辨率需大于 {{ MIN_HD_IMAGE_WIDTH }} x {{ MIN_HD_IMAGE_HEIGHT }} 且小于 {{ MAX_HD_IMAGE_WIDTH }} x {{ MAX_HD_IMAGE_HEIGHT }} 才能提升解析度。</small>
+              <colored-btn @click="handleHd" :loading="aiLoading" text="一键提升" :disabled="tooSmallHd || tooLargeHd" />
+              <p class="error-text" v-if="tooSmallHd">图片分辨率需大于 {{ MIN_HD_IMAGE_WIDTH }} x {{ MIN_HD_IMAGE_HEIGHT }} </p>
+              <p class="error-text" v-if="tooLargeHd">图片分辨率需小于 {{ MAX_HD_IMAGE_WIDTH }} x {{ MAX_HD_IMAGE_HEIGHT }} </p>
             </div>
           </div>
           <div v-if="activeTab === 'compress'" class="compress">
@@ -160,17 +182,29 @@
             </div>
             <div class="confirm-actions">
               <span>
-                <button class="toolbar-btn primary-text" @click="handleClose">取消</button>
+                <button :disabled="buttonLoading" class="toolbar-btn primary-text" @click="handleClose">取消</button>
               </span>
               <span :class="{ disabled: !controlsShow || controlLoading }">
-                <button @click="handleExportImage" class="toolbar-btn primary">确定</button>
+                <button
+                  v-if="showDownloadBtn"
+                  @click="handleDownloadImage"
+                  :disabled="buttonLoading"
+                  :class="[{ 'toolbar-btn': true, primary: !buttonLoading, disabled: buttonLoading }]"
+                >下载</button>
+                <button v-else @click="handleExportImage" class="toolbar-btn primary">确认</button>
               </span>
             </div>
           </div>
         </header>
         <div class="image-content">
           <div class="image-box" ref="imageBoxRef">
-            <svg-icon v-if="aiLoading" class="image-loading" :style="aiLoadingBoxSize" name="loading" :size="5" />
+            <AiLoading
+              v-if="aiLoading"
+              class="image-loading"
+              :style="aiLoadingBoxSize"
+              :width="aiLoadingBoxSize.width"
+              :height="aiLoadingBoxSize.height"
+            />
             <slot></slot>
             <!-- 进度条放在图片区域内 -->
             <transition name="fade">
@@ -195,17 +229,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, type Ref, watch, nextTick, computed, type ComputedRef } from 'vue';
-import useProgressBar from './useProgressBar';
-import SvgIcon from './SvgIcon.vue';
-import PhotoStudio, { type ICropRatio, type IDrawCanvasInfo } from '../../../../src/index';
-import AngleAdjustment from './AngleAdjustment.vue';
-import ColoredBtn from './ColoredBtn.vue';
-import EraserSizeSlider from './EraserSizeSlider.vue';
-import { controlTextData, cropControlData, colorListData } from './config';
+import AiLoading from './components/AiLoading.vue';
+import { ref, watch, computed, type ComputedRef } from 'vue';
+import useProgressBar from './hooks/useProgressBar';
+import SvgIcon from './components/SvgIcon.vue';
+import AddNewColor from './components/AddNewColor.vue';
+import { type IDrawCanvasInfo } from '../../../../src/index';
+import AngleAdjustment from './components/AngleAdjustment.vue';
+import ColoredBtn from './components/ColoredBtn.vue';
+import EraserSizeSlider from './components/EraserSizeSlider.vue';
+import { controlTextData, cropControlData } from './hooks/config';
+import useColors from './hooks/useColors';
 import {
   MIN_REMOVE_BG_WIDTH,
   MIN_REMOVE_BG_HEIGHT,
+  MAX_REMOVE_BG_WIDTH,
+  MAX_REMOVE_BG_HEIGHT,
   MAX_HD_IMAGE_WIDTH,
   MAX_HD_IMAGE_HEIGHT,
   MIN_HD_IMAGE_WIDTH,
@@ -222,7 +261,6 @@ import {
 
 type TabType = 'crop' | 'erase' | 'remove-bg' | 'hd' | 'compress' | 'expand';
 
-
 const nowLoading = defineModel<boolean>('loading');
 
 const nowWidth = defineModel<number>('width');
@@ -233,13 +271,23 @@ const imgCurrentWidth = defineModel<number>('img-current-width');
 
 const imgCurrentHeight = defineModel<number>('img-current-height');
 
-const allowRemoveBg = computed(() => (nowWidth.value ?? 0) > MIN_REMOVE_BG_WIDTH && (nowHeight.value ?? 0) > MIN_REMOVE_BG_HEIGHT)
+const tooSmallRemoveBg = computed(() => (nowWidth.value ?? 0) < MIN_REMOVE_BG_WIDTH || (nowHeight.value ?? 0) < MIN_REMOVE_BG_HEIGHT)
 
-/** 是否允许提升解析度 */
-const allowHd = computed(() => {
+const tooLargeRemoveBg = computed(() => (nowWidth.value ?? 0) > MAX_REMOVE_BG_WIDTH || (nowHeight.value ?? 0) > MAX_REMOVE_BG_HEIGHT)
+
+
+/** 图片尺寸小于最小解析尺寸 */
+const tooSmallHd = computed(() => {
   const width = nowWidth.value ?? 0
   const height = nowHeight.value ?? 0
-  return width > MIN_HD_IMAGE_WIDTH && height > MIN_HD_IMAGE_HEIGHT && width < MAX_HD_IMAGE_WIDTH && height < MAX_HD_IMAGE_HEIGHT
+  return width < MIN_HD_IMAGE_WIDTH || height < MIN_HD_IMAGE_HEIGHT
+})
+
+/** 图片尺寸大于最大解析尺寸 */
+const tooLargeHd = computed(() => {
+  const width = nowWidth.value ?? 0
+  const height = nowHeight.value ?? 0
+  return width > MAX_HD_IMAGE_WIDTH || height > MAX_HD_IMAGE_HEIGHT
 })
 
 /** 是否允许扩图 */
@@ -249,6 +297,21 @@ const allowExpand = computed(() => {
   return width > MIN_EXPAND_IMAGE_WIDTH && height > MIN_EXPAND_IMAGE_HEIGHT && width < MAX_EXPAND_IMAGE_WIDTH && height < MAX_EXPAND_IMAGE_HEIGHT
 })
 
+/** 图片尺寸小于最小扩图尺寸 */
+const tooSmallExpand = computed(() => {
+  const width = imgCurrentWidth.value ?? 0
+  const height = imgCurrentHeight.value ?? 0
+  return width < MIN_EXPAND_IMAGE_WIDTH || height < MIN_EXPAND_IMAGE_HEIGHT
+})
+
+/** 图片尺寸大于最大扩图尺寸 */
+const tooLargeExpand = computed(() => {
+  const width = imgCurrentWidth.value ?? 0
+  const height = imgCurrentHeight.value ?? 0
+  return width > MAX_EXPAND_IMAGE_WIDTH || height > MAX_EXPAND_IMAGE_HEIGHT
+})
+
+
 /** 是否允许擦除 */
 const allowErase = computed(() => {
   const width = nowWidth.value ?? 0
@@ -256,11 +319,23 @@ const allowErase = computed(() => {
   return width > MIN_ERASE_IMAGE_WIDTH && height > MIN_ERASE_IMAGE_HEIGHT && width < MAX_ERASE_IMAGE_WIDTH && height < MAX_ERASE_IMAGE_HEIGHT
 })
 
+/** 图片尺寸小于最小擦除尺寸 */
+const tooSmallErase = computed(() => {
+  const width = nowWidth.value ?? 0
+  const height = nowHeight.value ?? 0
+  return width < MIN_ERASE_IMAGE_WIDTH || height < MIN_ERASE_IMAGE_HEIGHT
+})
+
+/** 图片尺寸大于最大擦除尺寸 */
+const tooLargeErase = computed(() => {
+  const width = nowWidth.value ?? 0
+  const height = nowHeight.value ?? 0
+  return width > MAX_ERASE_IMAGE_WIDTH || height > MAX_ERASE_IMAGE_HEIGHT
+})
+
+
 /** 进度条相关逻辑 */
 const { showProgressBar, progress } = useProgressBar(nowLoading);
-
-/** 橡皮擦大小 */
-const eraserSize = ref(50);
 
 const cropData = ref({
   proportions: 'none',
@@ -276,7 +351,22 @@ const props = defineProps<{
   stepList: IDrawCanvasInfo[];
   realTimeStep: IDrawCanvasInfo | null;
   disabledForm: boolean;
+  cropRatios?: Record<string, number>;
+  showDownloadBtn?: boolean;
+  buttonLoading?: boolean;
+  nowMode: string;
+  eraserSize?: {
+    min: number;
+    max: number;
+    default: number;
+  };
 }>();
+
+const eraserDefaultSize = defineModel<number>('eraser-default-size', {
+  type: Number,
+  required: true,
+  default: 50
+})
 
 const controlLoading = computed(() => props.aiLoading);
 
@@ -286,7 +376,7 @@ const controlsShow = computed(() => props.isOperate);
 
 const currentStepIndex = computed(() => props.stepIndex);
 
-const currentStep = computed(() => props.stepList[currentStepIndex.value]);
+const currentStep = computed(() => props.stepList?.[currentStepIndex.value]);
 
 const cropRationLabel = computed(() => currentStep.value?.cropRationLabel || 'none');
 
@@ -294,12 +384,48 @@ const currentColor = computed(() => currentStep.value?.bgColor || 'transparent')
 
 const cropRatios = computed(() => props.cropRatios || cropControlData);
 
+const showDownloadBtn = computed(() => props.showDownloadBtn || false);
+
+const buttonLoading = computed(() => props.buttonLoading || false);
+
 const showCropRatios = computed(() => {
   return Object.keys(cropRatios.value).length > 1
 })
 
 const activeTab: ComputedRef<TabType> = computed(() => {
   return currentStep.value?.mode || 'crop'
+});
+
+/** 计算背景色块的位置 */
+const menuBgStyle = computed(() => {
+  const menuItems = Object.keys(controlTextData);
+  const activeIndex = menuItems.indexOf(activeTab.value);
+  /** 菜单项高度 (12px * 2 + 20px) */
+  const itemHeight = 44;
+  /** 菜单项间距 */
+  const itemMargin = 5;
+  const top = activeIndex * (itemHeight + itemMargin);
+  
+  return {
+    transform: `translateY(${top}px)`
+  };
+});
+
+/** 计算裁剪比例背景色块的位置 */
+const ratioBgStyle = computed(() => {
+  const ratioItems = Object.keys(cropRatios.value);
+  const activeIndex = ratioItems.indexOf(cropRationLabel.value);
+  if (activeIndex === -1 || cropRationLabel.value === 'none') {
+    return {};
+  }
+  const itemHeight = 36;
+  const itemMargin = 5;
+  const top = activeIndex * (itemHeight + itemMargin);
+  
+  return {
+    transform: `translateY(${top}px)`,
+    backgroundColor: '#e6e6e6'
+  };
 });
 
 const rotateAngle = computed({
@@ -364,8 +490,14 @@ const emit = defineEmits([
   'switch-mode',
   'hd',
   'color-change',
-  'handleSizeChange'
+  'handleSizeChange',
+  'handleDownloadImage'
 ]);
+
+/** 下载图片 */
+function handleDownloadImage() {
+  emit('handleDownloadImage');
+}
 
 /** 关闭 */
 function handleClose() {
@@ -385,23 +517,31 @@ const controlText = ref(controlTextData)
 
 const cropControl = ref(cropControlData)
 
-const colorList = ref(colorListData)
+/** 修改颜色 */
+function handleColorChange(color: string) {
+  console.log(color)
+  emit('color-change', color);
+}
+
+const {
+  colorBoxVisible,
+  localColorList,
+  allColorsList,
+  removeLocalColorStorage,
+  handleAddNewColor
+} = useColors(handleColorChange, currentColor)
 
 const switchTab = (tab: TabType) => {
   const oldMode = activeTab.value;
 
   emit('switch-mode', { oldMode, newMode: tab });
   if (tab === 'erase') {
-    setTimeout(() => {
-      handleSetEraserSize(eraserSize.value);
-    }, 500)
+    // setTimeout(() => {
+    //   handleSetEraserSize(eraserDefaultSize.value);
+    // }, 500)
   }
 }
 
-/** 修改颜色 */
-function handleColorChange(color: string) {
-  emit('color-change', color);
-}
 
 /** 按比例裁剪 */
 function handleCropRatio(ratio: number, label: string) {
@@ -412,7 +552,9 @@ function handleCropRatio(ratio: number, label: string) {
 }
 
 watch(rotateAngle, (newVal) => {
-  handleRotate(newVal);
+  if (props.nowMode === 'crop') {
+    handleRotate(newVal);
+  }
 })
 
 /** 旋转 */
@@ -428,13 +570,13 @@ function handleTurn(direction: 'left' | 'right') {
   emit('turn', direction);
 }
 
-watch(eraserSize, (newVal) => {
-  handleSetEraserSize(newVal);
+watch(eraserDefaultSize, (newVal) => {
+  emit('set-eraser-size', newVal);
 }, { immediate: true })
 
-function handleSetEraserSize(size: number) {
-  emit('set-eraser-size', size);
-}
+// function handleSetEraserSize(size: number) {
+//   emit('set-eraser-size', size);
+// }
 
 /** 导出图片 */
 function handleExportImage() {
@@ -492,7 +634,7 @@ function getRatioStyle(ratio: number): Record<string, string> {
 </script>
 
 <style lang="less" scoped>
-@import './index.less';
+@import './assets/style/index.less';
 
 // 为裁剪比例图标添加样式
 .icon-btn {

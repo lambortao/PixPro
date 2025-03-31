@@ -11,19 +11,19 @@ import { debounce } from 'lodash-es';
 class DragHandler {
   private static instance: DragHandler | null = null;
   /** 拖拽的把手 */
-  private gripperActiveElement: HTMLElement | null = null;
+  // private gripperActiveElement: HTMLElement | null = null;
   /** 拖拽的把手类型 */
   private gripperActive: IDraggableGripper | null = null;
   /** 是否正在拖拽 */
   private isMoving = false;
   /** 开始拖拽的坐标 */
-  private startPoint = { x: 0, y: 0 };
+  // private startPoint = { x: 0, y: 0 };
   /** 当前拖拽的坐标 */
   private mousePoint = { x: 0, y: 0 };
   /** requestAnimationFrame 渲染步骤 */
-  private rafId: number | null = null;
+  // private rafId: number | null = null;
   /** 容器 */
-  private containerRect: DOMRect;
+  // private containerRect: DOMRect | null = null;
   /** 预览父框体的 dom 实例 */
   public previewDom: HTMLElement | null = null;
   /** 操作框体的 dom 实例 */
@@ -45,20 +45,21 @@ class DragHandler {
   private currentStepStartInfo: IDrawCanvasInfo = { ...startStepInfo };
 
   /** 允许缩放 */
-  private isAllowZoom = true;
+  // private isAllowZoom = true;
 
-  private nowXDomOffset = 0;
-  private nowYDomOffset = 0;
+  // private nowXDomOffset = 0;
+  // private nowYDomOffset = 0;
 
   private dragBoundaryCalculator: DragBoundaryCalculator | null = null;
 
   /** 鼠标缩放提示的 DOM 实例 */
-  private mouseZoomTipDom: HTMLElement | null = null;
+  // private mouseZoomTipDom: HTMLElement | null = null;
   /** 是否已经显示过鼠标缩放提示 */
-  private hasShownMouseZoomTip = false;
+  // private hasShownMouseZoomTip = false;
 
   private constructor(container: HTMLElement, canvas: HTMLImageElement) {
-    this.containerRect = container.getBoundingClientRect();
+    // this.containerRect = container.getBoundingClientRect();
+    console.log('container', container)
     this.canvasDom = canvas;
     this.initEvents();
   }
@@ -69,7 +70,7 @@ class DragHandler {
       DragHandler.instance = new DragHandler(container, canvas);
     } else {
       // 重新初始化现有实例
-      DragHandler.instance.containerRect = container.getBoundingClientRect();
+      // DragHandler.instance.containerRect = container.getBoundingClientRect();
       DragHandler.instance.canvasDom = canvas;
       DragHandler.instance.initEvents();
     }
@@ -82,7 +83,7 @@ class DragHandler {
     this.curtainDom = document.querySelector('.control-container') as HTMLElement;
     this.previewCurtainDom = document.querySelector('#preview-curtain-box') as HTMLElement;
     this.remindImageDom = document.querySelector('#remind-image') as HTMLElement;
-    this.mouseZoomTipDom = document.querySelector('#mouse-zoom-tip') as HTMLElement;
+    // this.mouseZoomTipDom = document.querySelector('#mouse-zoom-tip') as HTMLElement;
     
     /** 销毁所有事件 */
     this.destroy();
@@ -134,7 +135,7 @@ class DragHandler {
 
     this.updateRenderStep()
     /** 设置拖拽把手 */
-    this.gripperActiveElement = target;
+    // this.gripperActiveElement = target;
     this.gripperActive = gripperType;
 
     /** 设置拖动状态 */
@@ -145,8 +146,8 @@ class DragHandler {
 
     /** 设置拖动起点 */
     this.mousePoint = { x: e.clientX, y: e.clientY };
-    this.nowXDomOffset = this.renderStep!.xDomOffset ?? 0;
-    this.nowYDomOffset = this.renderStep!.yDomOffset ?? 0;
+    // this.nowXDomOffset = this.renderStep!.xDomOffset ?? 0;
+    // this.nowYDomOffset = this.renderStep!.yDomOffset ?? 0;
     e.preventDefault();
 
     /** 实例化 DragBoundaryCalculator */
@@ -217,7 +218,7 @@ class DragHandler {
 
 
     this.isMoving = false;
-    this.gripperActiveElement = null;
+    // this.gripperActiveElement = null;
     this.gripperActive = null;
     e.preventDefault();
   }

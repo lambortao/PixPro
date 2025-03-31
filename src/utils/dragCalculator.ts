@@ -11,10 +11,6 @@ export default class DragBoundaryCalculator {
   private cropRatio: number | null;
   /** 是否允许拖拽 */
   private isAllowDrag: boolean;
-  /** 额外 x 轴偏移量 */
-  private extraX: number | null;
-  /** 额外 y 轴偏移量 */
-  private extraY: number | null;
 
   constructor(
     currentStepStartInfo: IDrawCanvasInfo,
@@ -28,16 +24,12 @@ export default class DragBoundaryCalculator {
     this.cropRatio = null;
     /** 是否允许拖拽 */
     this.isAllowDrag = true;
-    /** 额外 x 轴偏移量 */
-    this.extraX = null;
-    /** 额外 y 轴偏移量 */
-    this.extraY = null;
   }
 
   private allowTop = true
-  private allowRight = true
-  private allowBottom = true
-  private allowLeft = true
+  // private allowRight = true
+  // private allowBottom = true
+  // private allowLeft = true
 
   /** 边界检查 */
   public checkBoundary(gripper: IDraggableGripper) {
@@ -383,9 +375,9 @@ export default class DragBoundaryCalculator {
 
   public resetAllow() {
     this.allowTop = true
-    this.allowRight = true
-    this.allowBottom = true
-    this.allowLeft = true
+    // this.allowRight = true
+    // this.allowBottom = true
+    // this.allowLeft = true
   }
 
   /** 

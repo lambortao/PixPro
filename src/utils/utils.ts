@@ -187,7 +187,7 @@ export function calculateDimensions(domSize: IDomSize, width: number, height: nu
 }
 
 /** 四舍五入，保留小数点后指定位数，默认 4 位 */
-export function round(value: number, digits: number = 9): number {
+export function round(value: number, digits: number = 15): number {
   if (digits === 0) {
     return Math.round(value);
   }
@@ -526,8 +526,6 @@ export function calcTurnData(
   const {
     rawDomHeight,
     rawDomWidth,
-    rawImgHeight,
-    rawImgWidth,
     currentDomWidth,
     currentDomHeight,
     cropBoxWidth,
@@ -687,7 +685,7 @@ interface Position {
   y: number;
 }
 
-interface CropCalculationResult {
+export interface CropCalculationResult {
   /** 需要应用的缩放比例 */
   scale: number;                 
   /** transform-origin 值 */
@@ -822,7 +820,6 @@ export function calculateCropTransform(
   position: Position,
   angle: number
 ): any {
-  console.log(angle, position)
   
   /** 计算裁切框对角线长度 */
   const diagonal = Math.sqrt(
@@ -973,6 +970,9 @@ export function canvasToGrayBase64(
   height: number,
   hasHeader: boolean = true
 ): string {
+  width = Math.round(width);
+  height = Math.round(height);
+  console.log(width, height, 'width, height')
   // 创建临时 canvas
   const tempCanvas = document.createElement('canvas');
   tempCanvas.width = width;
@@ -1309,11 +1309,8 @@ export function calculateExpandBoxWHB (
   rawDomSize: IDomSize,
   cropRatio: number | null
 ) {
+  console.log('calculateExpandBoxWHB', nowStep, rawDomSize, cropRatio)
   const {
-    xDomOffset = 0,
-    yDomOffset = 0,
-    cropBoxWidth = 0,
-    cropBoxHeight = 0,
     currentDomHeight = 0,
     currentDomWidth = 0,
     fenceMaxHeight = 0,
@@ -1413,15 +1410,10 @@ export function calculateExpandBoxWH (
   nowStep: IDrawCanvasInfo,
   cropRatio: number | null
 ) {
+  console.log('calculateExpandBoxWH', nowStep, cropRatio)
   const {
-    xDomOffset = 0,
-    yDomOffset = 0,
-    cropBoxWidth = 0,
-    cropBoxHeight = 0,
     currentDomHeight = 0,
     currentDomWidth = 0,
-    fenceMaxHeight = 0,
-    fenceMaxWidth = 0
   } = { ...nowStep }
   const newStep = { ...nowStep }
   let isOverMaxRatio = false
@@ -1500,7 +1492,7 @@ export function calculateExpandBoxUniversal(
   }
   
   // 计算当前图片的宽高比
-  const currentRatio = currentDomWidth / currentDomHeight;
+  // const currentRatio = currentDomWidth / currentDomHeight;
   
   // 初始化变量
   let cropBoxWidth = 0;
@@ -1601,4 +1593,99 @@ export function calculateExpandBoxUniversal(
   // newStep.cropRationLabel = (isOverMaxRatio ? 'none' : String(targetRatio)) as ICropRatio;
   
   return { step: newStep, isOverMaxRatio };
+}
+
+/**
+ * 确保擦除蒙版和原图具有相同的分辨率
+ * 
+ * 该函数用于处理擦除操作中可能出现的蒙版与原图分辨率不一致的问题（差1px）
+ * 如果检测到分辨率不同，会调整蒙版为原图的分辨率并返回调整后的base64
+ * 
+ * @param originalWidth 原图宽度
+ * @param originalHeight 原图高度
+ * @param maskBase64 蒙版图片base64（不含header）
+ * @param maskWidth 蒙版宽度
+ * @param maskHeight 蒙版高度
+ * @returns 调整后的蒙版base64（不含header）
+ */
+export async function ensureSameResolution(
+  originalWidth: number,
+  originalHeight: number,
+  maskBase64: string,
+  maskWidth: number,
+  maskHeight: number
+): Promise<string> {
+  // 如果尺寸已经相同，直接返回原始蒙版
+  if (originalWidth === maskWidth && originalHeight === maskHeight) {
+    return maskBase64;
+  }
+
+  console.log('检测到蒙版与原图分辨率不一致:', {
+    原图: { width: originalWidth, height: originalHeight },
+    蒙版: { width: maskWidth, height: maskHeight }
+  });
+
+  // 创建临时图片对象加载蒙版
+  const tempImage = new Image();
+  const tempCanvas = document.createElement('canvas');
+  const ctx = tempCanvas.getContext('2d');
+  
+  if (!ctx) {
+    console.error('无法创建Canvas上下文');
+    return maskBase64;
+  }
+
+  // 设置canvas尺寸为原图尺寸
+  tempCanvas.width = originalWidth;
+  tempCanvas.height = originalHeight;
+
+  // 使用Promise处理异步图片加载
+  try {
+    await new Promise<void>((resolve, reject) => {
+      tempImage.onload = () => resolve();
+      tempImage.onerror = reject;
+      tempImage.src = `data:image/png;base64,${maskBase64}`;
+    });
+    
+    // 将蒙版绘制到与原图相同尺寸的canvas
+    ctx.drawImage(tempImage, 0, 0, originalWidth, originalHeight);
+    
+    // 确保是二值灰度图
+    const imageData = ctx.getImageData(0, 0, originalWidth, originalHeight);
+    const data = imageData.data;
+    
+    // 创建新的ImageData
+    const grayImageData = ctx.createImageData(originalWidth, originalHeight);
+    const grayData = grayImageData.data;
+    
+    // 转换为二值灰度图
+    for (let i = 0; i < data.length; i += 4) {
+      // 检查像素是否存在（透明度不为0）
+      const hasPixel = data[i + 3] > 0;
+      
+      // 设置灰度值：有像素为白色(255)，无像素为黑色(0)
+      const grayValue = hasPixel ? 255 : 0;
+      
+      // 设置RGB通道为相同的灰度值
+      grayData[i] = grayValue;     // R
+      grayData[i + 1] = grayValue; // G
+      grayData[i + 2] = grayValue; // B
+      grayData[i + 3] = 255;       // A (完全不透明)
+    }
+    
+    // 将灰度图绘制回临时canvas
+    ctx.putImageData(grayImageData, 0, 0);
+    
+    // 转换为base64并去除header
+    const base64 = tempCanvas.toDataURL('image/png').split(',')[1];
+    
+    console.log('蒙版分辨率已调整为与原图一致:', {
+      调整后: { width: originalWidth, height: originalHeight }
+    });
+    
+    return base64;
+  } catch (error) {
+    console.error('调整蒙版分辨率失败:', error);
+    return maskBase64;
+  }
 }

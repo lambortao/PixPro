@@ -1,8 +1,8 @@
 import { App } from 'vue';
-import PixProVue from './PixProVue.vue';
+import { PixProVue } from './index';
 
 // 导入样式
-import './PixProSkin/assets/style/index.less';
+import './styles/index.less';
 
 // 创建Vue插件
 export default {

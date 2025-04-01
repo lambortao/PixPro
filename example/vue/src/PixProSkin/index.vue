@@ -92,8 +92,8 @@
             <div class="section">
               <EraserSizeSlider
                 v-model:size="eraserDefaultSize"
-                :min="eraserSize.min"
-                :max="eraserSize.max"
+                :min="eraserSize?.min ?? 20"
+                :max="eraserSize?.max ?? 100"
               />
               <colored-btn
                 text="一键擦除"

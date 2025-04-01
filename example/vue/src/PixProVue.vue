@@ -47,9 +47,12 @@
 <script setup lang="ts">
 import { onMounted, ref, nextTick, watch } from 'vue';
 import PixProSkin from './PixProSkin/index.vue';
+
+/** 开发包的测试 */
 // import PhotoStudio, { type ICropRatio, type IDrawCanvasInfo, type IImageMode } from '../../../src/index';
+
+/** 远程包的测试 */
 import PhotoStudio, { type ICropRatio, type IDrawCanvasInfo, type IImageMode } from '@pixpro/core';
-// import PhotoStudio, { type ICropRatio, type IDrawCanvasInfo, type IImageMode } from '../../../packages/pixpro-core/dist/index.mjs';
 
 const photoStudioContainer = ref<HTMLElement | null>(null);
 

@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
-import { resolve } from 'path';
+import path from 'path';
 
 export default defineConfig({
   plugins: [
@@ -12,15 +12,6 @@ export default defineConfig({
       }
     })
   ],
-  optimizeDeps: {
-    include: [],
-    exclude: []
-  },
-  build: {
-    commonjsOptions: {
-      esmExternals: true
-    }
-  },
   server: {
     port: 1220,
     open: true,
@@ -34,13 +25,12 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': resolve(__dirname, '../../src')
+      '@': path.resolve(__dirname, '../../src'),
     },
-    extensions: ['.js', '.ts', '.jsx', '.tsx', '.json', '.mjs']
   },
   css: {
     modules: {
       scopeBehaviour: 'local',
     }
   }
-});
+}); 

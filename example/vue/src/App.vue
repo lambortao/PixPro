@@ -43,10 +43,13 @@
 </template>
   
 <script setup lang='ts'>
+/** 当前目录的测试 */
 // import PixProVue from './PixProVue.vue';
-// import PixProVue from '../../../packages/pixpro-vue/src/components/PixProVue.vue';
+
+/** 远程包的测试 */
 import { PixProVue } from '@pixpro/vue';
 import '@pixpro/vue/dist/index.css'
+
 import { computed, ref } from 'vue';
 
 const pixProAttrs = computed(() => ({

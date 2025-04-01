@@ -156,7 +156,5 @@ declare module '@pixpro/core' {
     setRemoveBgColor: (color: string) => void;
     hd: () => void;
     switchMode: (oldMode: IImageMode, newMode: IImageMode) => void;
-    uploadFile: (file: File) => void;
-    downloadImage: () => void;
   }
 } 

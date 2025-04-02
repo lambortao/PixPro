@@ -44,11 +44,11 @@
   
 <script setup lang='ts'>
 /** 当前目录的测试 */
-// import PixProVue from './PixProVue.vue';
+import PixProVue from './PixProVue.vue';
 
 /** 远程包的测试 */
-import { PixProVue } from '@pixpro/vue';
-import '@pixpro/vue/dist/index.css'
+// import { PixProVue } from '@pixpro/vue';
+// import '@pixpro/vue/dist/index.css'
 
 import { computed, ref } from 'vue';
 

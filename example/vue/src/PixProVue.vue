@@ -49,10 +49,10 @@ import { onMounted, ref, nextTick, watch } from 'vue';
 import PixProSkin from './PixProSkin/index.vue';
 
 /** 开发包的测试 */
-// import PhotoStudio, { type ICropRatio, type IDrawCanvasInfo, type IImageMode } from '../../../src/index';
+import PhotoStudio, { type ICropRatio, type IDrawCanvasInfo, type IImageMode } from '../../../src/index';
 
 /** 远程包的测试 */
-import PhotoStudio, { type ICropRatio, type IDrawCanvasInfo, type IImageMode } from '@pixpro/core';
+// import PhotoStudio, { type ICropRatio, type IDrawCanvasInfo, type IImageMode } from '@pixpro/core';
 
 const photoStudioContainer = ref<HTMLElement | null>(null);
 

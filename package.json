@@ -1,6 +1,6 @@
 {
-  "name": "photo-studio",
-  "version": "0.1.0",
+  "name": "pixpro",
+  "version": "0.1.12",
   "main": "index.js",
   "license": "MIT",
   "devDependencies": {

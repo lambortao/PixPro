@@ -221,6 +221,7 @@ export interface IPhotoStudio {
   setRemoveBgColor: (color: string) => void;
   hd: () => void;
   switchMode: (oldMode: IImageMode, newMode: IImageMode) => void;
+  toogleRemindImage: (visible: boolean) => void;
 }
 
 export interface IEraserSize {

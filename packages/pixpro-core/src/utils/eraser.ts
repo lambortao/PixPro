@@ -152,6 +152,9 @@ export default class Eraser {
       size: this.eraserSize.default,
       color: this.defaultColor
     }];
+    
+    // 立即绘制单个点，使单击时可见
+    this.drawSinglePoint(this.currentPath[0]);
   }
 
   private draw(event: MouseEvent): void {
@@ -259,11 +262,25 @@ export default class Eraser {
     
     // 遍历每条轨迹
     points.forEach(path => {
-      // 绘制轨迹中的点
-      for (let i = 0; i < path.length - 1; i++) {
-        this.drawPath([path[i], path[i + 1]]);
+      // 处理只有一个点的情况（单击）
+      if (path.length === 1) {
+        this.drawSinglePoint(path[0]);
+      } else {
+        // 绘制轨迹中的点
+        for (let i = 0; i < path.length - 1; i++) {
+          this.drawPath([path[i], path[i + 1]]);
+        }
       }
     });
+  }
+
+  /** 绘制单个点 */
+  private drawSinglePoint(point: {x: number, y: number, size: number, color: string}): void {
+    this.ctx.beginPath();
+    this.ctx.arc(point.x, point.y, point.size / 2, 0, Math.PI * 2);
+    this.ctx.fillStyle = point.color;
+    this.ctx.fill();
+    this.ctx.closePath();
   }
 
   /** 将 RGB 颜色转换为 HEX 格式 */

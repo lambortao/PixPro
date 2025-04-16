@@ -225,10 +225,10 @@
   resolved "https://registry.yarnpkg.com/@microsoft/tsdoc/-/tsdoc-0.14.2.tgz#c3ec604a0b54b9a9b87e9735dfc59e1a5da6a5fb"
   integrity sha512-9b8mPpKrfeGRuhFH5iO1iwCLeIIsV6+H1sRfxbkoGXIyQE2BTsPd9zqSqQJ+pv5sJ/hT5M1zvOFL02MnEezFug==
 
-"@pixpro/core@^0.1.11":
-  version "0.1.11"
-  resolved "https://registry.yarnpkg.com/@pixpro/core/-/core-0.1.11.tgz#b277b51fdb25d6b934cfd66cfef56d39ea9f0bcc"
-  integrity sha512-VfmRExjt7AwV1q/PbnngNzPLXcaog1jXoQf00I34IL9cLSpv5gy+f4rMOY1zRQ2oCglONSYwiJtmLXK/HfX6Ng==
+"@pixpro/core@^0.1.14":
+  version "0.1.14"
+  resolved "https://registry.yarnpkg.com/@pixpro/core/-/core-0.1.14.tgz#0f8af68f428b657d6994569f6d810830ce092919"
+  integrity sha512-iPRqUg0FNCvNkk6ZtCyLpDvGj2q3+G+jI0huEboujMACqATu9dStZLuRjkoP1q3W3CeluBJlGEzZlcnz269lZw==
   dependencies:
     compressorjs "^1.2.1"
     lodash-es "^4.17.21"

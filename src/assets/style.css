@@ -130,6 +130,7 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
 .control-container, .eraser-container {
   box-sizing: border-box;
   position: absolute;
@@ -139,6 +140,9 @@
   height: 100%;
   border: 1.5px solid #c5c5c5;
   z-index: 3;
+}
+.control-container {
+  z-index: 9;
 }
 .eraser-container {
   z-index: 5;

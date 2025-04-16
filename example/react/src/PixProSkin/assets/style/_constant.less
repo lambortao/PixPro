@@ -1,0 +1,23 @@
+@primary-color: #184aff;
+@radius: 8px;
+@selected-bgc: #e6e6e6;
+@border-color: #e8e8e8;
+
+.ani300 {
+  transition: all 0.3s ease;
+}
+
+.btn-line {
+  position: relative;
+  &:before {
+    content: "";
+    display: block;
+    width: 1px;
+    height: 60%;
+    background-color: #e0e5ea;
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+}

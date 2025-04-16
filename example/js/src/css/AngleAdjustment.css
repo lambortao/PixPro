@@ -1,0 +1,111 @@
+.rotate-ruler {
+  width: 54px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  cursor: ns-resize;
+  user-select: none;
+}
+
+.rotate-ruler:after,
+.rotate-ruler:before {
+  content: "";
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: calc(50% - 100px);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.rotate-ruler:before {
+  top: 0;
+  background: linear-gradient(to bottom, rgba(249, 249, 249, 1) 0%, rgba(249, 249, 249, 1) 80%, rgba(249, 249, 249, 0.8) 90%, rgba(249, 249, 249, 0) 100%);
+}
+
+.rotate-ruler:after {
+  bottom: 0;
+  background: linear-gradient(to bottom, rgba(249, 249, 249, 0) 0%, rgba(249, 249, 249, 0.8) 10%, rgba(249, 249, 249, 1) 20%, rgba(249, 249, 249, 1) 100%);
+}
+
+.rotate-ruler .slide-container {
+  width: 100%;
+  height: 540px;
+  position: relative;
+  left: -12px;
+  top: -4px;
+}
+
+.rotate-ruler .ruler-content {
+  width: 100%;
+  height: 100%;
+}
+
+.rotate-ruler .ruler-scale {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.rotate-ruler .ruler-scale .scale-row {
+  height: 9px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.rotate-ruler .ruler-scale .number-cell {
+  flex: 1;
+  height: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.rotate-ruler .ruler-scale .number-cell span {
+  font-size: 12px;
+  width: 34px;
+  text-align: right;
+  padding-right: 4px;
+  color: rgba(42, 50, 70, 0.7);
+}
+
+.rotate-ruler .ruler-scale .scale-cell {
+  width: 16px;
+  height: 9px;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.rotate-ruler .ruler-scale .scale-cell .scale-line {
+  height: 2px;
+  background-color: rgba(42, 50, 70, 0.2);
+  position: absolute;
+  right: 4px;
+  width: 5px;
+  border-radius: 1px;
+}
+.rotate-ruler .ruler-scale .major-scale .scale-line {
+  width: 9px;
+  right: 0px;
+  background-color: rgba(42, 50, 70, 0.5);
+}
+
+.rotate-ruler .ruler-pointer img {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  margin-right: 0;
+}

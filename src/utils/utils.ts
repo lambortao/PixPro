@@ -1217,7 +1217,11 @@ export function getHeightForWidth (nowStep: IDrawCanvasInfo, width: number, rawD
 }
 
 /** 图片裁切后裁切框及其附件放大 */
-export function getCropBoxAndAttachmentWH (nowStep: IDrawCanvasInfo, rawDomSize: IDomSize) {
+export function getCropBoxAndAttachmentWH (
+  nowStep: IDrawCanvasInfo,
+  rawDomSize: IDomSize,
+  mainDirection?: 'width' | 'height'
+) {
   /**
    * 1. 图片本身有一个裁切后的宽高：cropBoxWidth 和 cropBoxHeight
    * 2. 图片本身有一个裁切框相对于外切矩形左上角的偏移量：xCropOffset 和 yCropOffset
@@ -1688,4 +1692,35 @@ export async function ensureSameResolution(
     console.error('调整蒙版分辨率失败:', error);
     return maskBase64;
   }
+}
+
+/**
+ * 计算偏移量是否超出围栏
+ */
+export function calculateOffsetOverFence(nowStep: IDrawCanvasInfo) {
+
+  /** 左边界 */
+  if ((nowStep.xDomOffset ?? 0) <= 0) {
+    nowStep.xDomOffset = 0
+  }
+  /** 上边界 */
+  if ((nowStep.yDomOffset ?? 0) <= 0) {
+    nowStep.yDomOffset = 0
+  }
+  /** 最大围栏宽度 */
+  const maxFenceWidth = Math.max(nowStep.currentDomWidth, nowStep.fenceMaxWidth)
+  /** 最大围栏高度 */
+  const maxFenceHeight = Math.max(nowStep.currentDomHeight, nowStep.fenceMaxHeight)
+  const maxXOffset = maxFenceWidth - (nowStep.cropBoxWidth ?? 0)
+  const maxYOffset = maxFenceHeight - (nowStep.cropBoxHeight ?? 0)
+
+  /** 右边界 */
+  if ((nowStep.xDomOffset ?? 0) > maxXOffset) {
+    nowStep.xDomOffset = maxXOffset
+  }
+  /** 下边界 */
+  if ((nowStep.yDomOffset ?? 0) > maxYOffset) {
+    nowStep.yDomOffset = maxYOffset
+  }
+  return nowStep
 }

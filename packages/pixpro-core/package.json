@@ -1,6 +1,6 @@
 {
   "name": "@pixpro/core",
-  "version": "0.1.12",
+  "version": "0.1.14",
   "description": "图片处理底层库，提供裁剪、缩放、AI 扩图等功能",
   "type": "module",
   "main": "dist/index.js",

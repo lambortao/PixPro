@@ -1,0 +1,1123 @@
+body,
+html {
+  margin: 0;
+  padding: 0;
+}
+.editor-main {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 46px;
+  box-sizing: border-box;
+}
+
+.editor-main header {
+  height: 56px;
+}
+
+.pix-pro-container {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-width: 960px;
+  background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+
+.pix-pro-container .close-btn {
+  width: 30px;
+  height: 30px;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+.pix-pro-container nav {
+  width: 160px;
+  min-width: 140px;
+  max-width: 200px;
+  box-sizing: border-box;
+  border-right: 1px solid #e8e8e8;
+  padding: 56px 10px 0;
+  position: relative;
+}
+
+.pix-pro-container nav menu {
+  padding: 0;
+  margin: 0;
+  position: relative;
+}
+
+.pix-pro-container nav .menu-bg {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 44px;
+  background-color: #e6e6e6;
+  border-radius: 8px;
+  transition: transform 300ms ease;
+  pointer-events: none;
+  margin: 0;
+  padding: 0;
+}
+
+.pix-pro-container nav menu > div {
+  height: 44px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 8px;
+  margin: 5px 0;
+  position: relative;
+  z-index: 1;
+}
+
+.pix-pro-container nav menu > div:hover {
+  background-color: transparent;
+}
+
+.pix-pro-container nav menu > div i {
+  margin-right: 5px;
+}
+
+.pix-pro-container nav menu > div span {
+  font-size: 14px;
+  display: inline-block;
+  margin-left: 10px;
+}
+
+.pix-pro-container nav menu > div.active {
+  background-color: transparent;
+}
+
+.pix-pro-container nav menu.disabled > div {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.pix-pro-container nav menu > div.disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  pointer-events: auto !important;
+}
+
+.pix-pro-container nav menu > div.disabled:hover {
+  background-color: transparent !important;
+}
+
+.pix-pro-container nav figure.logo {
+  margin: 0;
+  padding: 0;
+  position: absolute;
+  bottom: 20px;
+  left: 25px;
+}
+
+.pix-pro-container .controls-container {
+  width: 268px;
+  min-width: 268px;
+  max-width: 300px;
+  box-sizing: border-box;
+  background-color: #fff;
+  border-right: 1px solid #e8e8e8;
+  display: flex;
+  flex-direction: column;
+  padding: 64px 20px 0;
+}
+
+.pix-pro-container .controls-container .control-header {
+  margin-bottom: 10px;
+}
+
+.pix-pro-container .controls-container .control-header h3 {
+  margin: 0 0 0 0;
+  font-size: 24px;
+  color: #333;
+  font-weight: 500;
+}
+
+.pix-pro-container .controls-container .control-header small {
+  color: #9198a9;
+  margin-top: 10px;
+  display: block;
+}
+
+.pix-pro-container .controls-container .control-content {
+  flex: 1;
+  /* overflow-y: auto; */
+}
+
+/* 添加垂直分隔线 */
+.pix-pro-container .controls-container span.line {
+  display: block;
+  width: 100%;
+  height: 1px;
+  background-color: #e8e8e8;
+  margin: 20px 0;
+}
+.pix-pro-container .controls-container .crop-ratios {
+  margin-bottom: 15px;
+  position: relative;
+}
+.pix-pro-container .controls-container .ratio-bg {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 36px;
+  border-radius: 8px;
+  transition: transform 300ms ease;
+  pointer-events: none;
+  margin: 0;
+  background-color: rgb(230, 230, 230);
+}
+/* 优化按钮和UI元素 */
+.pix-pro-container .controls-container .icon-btn {
+  padding: 8px;
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  cursor: pointer;
+  border-radius: 8px;
+  margin: 5px 0;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+/* .pix-pro-container .controls-container .icon-btn:hover:not(.disabled) {
+  background-color: #f5f5f5;
+} */
+
+.pix-pro-container .controls-container .icon-btn i {
+  width: 30px;
+  height: 20px;
+}
+
+.pix-pro-container .controls-container .icon-btn span {
+  display: inline-block;
+  margin-left: 10px;
+  font-size: 14px;
+}
+
+/* .pix-pro-container .controls-container .icon-btn.active:not(.disabled) {
+  background-color: #f5f5f5;
+} */
+
+.pix-pro-container .controls-container .icon-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed !important;
+}
+
+/* .pix-pro-container .controls-container .icon-btn.disabled:hover {
+  background-color: transparent !important;
+} */
+
+.pix-pro-container .controls-container .crop-ratio-btn {
+  min-width: 70px;
+  padding: 8px 12px;
+  border: 1px solid #e8e8e8;
+  border-radius: 6px;
+  background-color: #fff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  font-size: 14px;
+}
+
+.pix-pro-container .controls-container .crop-ratio-btn:hover {
+  background-color: #f5f5f5;
+}
+
+.pix-pro-container .controls-container .crop-ratio-btn.active {
+  border-color: #184aff;
+  background-color: rgba(24, 74, 255, 0.1);
+}
+
+/* 操作按钮 */
+.pix-pro-container .controls-container .action-buttons {
+  margin-top: 20px;
+}
+
+.pix-pro-container .controls-container .primary-btn {
+  width: 100%;
+  background-color: #184aff;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.pix-pro-container .controls-container .primary-btn:hover {
+  background-color: #4066ff;
+}
+
+.pix-pro-container .controls-container .primary-btn:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* 禁用的UI元素 */
+.pix-pro-container .disabled,
+.pix-pro-container [disabled],
+.pix-pro-container .toolbar-btn.disabled,
+.pix-pro-container .toolbar-btn[disabled],
+.pix-pro-container .icon-btn.disabled,
+.pix-pro-container nav menu > div.disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  pointer-events: auto !important;
+}
+
+.pix-pro-container .disabled > *,
+.pix-pro-container [disabled] > *,
+.pix-pro-container .toolbar-btn.disabled > *,
+.pix-pro-container .toolbar-btn[disabled] > *,
+.pix-pro-container .icon-btn.disabled > *,
+.pix-pro-container nav menu > div.disabled > * {
+  cursor: not-allowed !important;
+}
+
+.pix-pro-container .toolbar-btn.disabled:hover,
+.pix-pro-container .toolbar-btn[disabled]:hover,
+/* .pix-pro-container .icon-btn.disabled:hover, */
+.pix-pro-container nav menu > div.disabled:hover {
+  background-color: transparent !important;
+}
+
+/* 全屏遮罩 */
+.full-screen-blocker {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 21;
+  background-color: transparent;
+  /* cursor: wait; */
+  user-select: none;
+  pointer-events: all;
+}
+
+.pix-pro-container .crop div.section {
+  margin-bottom: 15px;
+}
+
+.pix-pro-container .crop .size-inputs {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pix-pro-container .crop .size-inputs label {
+  display: inline-block;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.pix-pro-container .crop .size-inputs input {
+  width: 100px;
+  height: 30px;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  padding: 0 10px;
+  box-sizing: border-box;
+}
+
+.pix-pro-container .crop .flip-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pix-pro-container .crop .flip-btn button {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.pix-pro-container .crop .flip-btn button:hover:not([disabled]) {
+  background-color: #f5f5f5;
+}
+
+.pix-pro-container .crop .flip-btn button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed !important;
+}
+
+.pix-pro-container .crop .flip-btn button[disabled]:hover {
+  background-color: transparent !important;
+}
+
+.pix-pro-container .crop .flip-btn button:not(:last-child) {
+  position: relative;
+}
+
+.pix-pro-container .crop .flip-btn button:not(:last-child):before {
+  content: "";
+  display: block;
+  width: 1px;
+  height: 60%;
+  background-color: #e0e5ea;
+  position: absolute;
+  right: -20px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.pix-pro-container .remove-bg .color-list small {
+  display: block;
+  margin-bottom: 20px;
+}
+
+.pix-pro-container .remove-bg .color-box {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 50px);
+  gap: 5px;
+}
+
+.pix-pro-container .remove-bg .color-box .color-item {
+  width: 50px;
+  height: 50px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  padding: 3px;
+  box-sizing: border-box;
+  position: relative;
+}
+.pix-pro-container .remove-bg .color-box .color-item .close-icon {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background-color: #fff;
+  border-radius: 50%;
+  border: 1px solid #cdd5dd;
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+.pix-pro-container .remove-bg .color-box .color-item .close-icon img {
+  width: 10px;
+  height: 10px;
+  display: block;
+}
+.pix-pro-container .remove-bg .color-box .color-item:hover .close-icon {
+  opacity: 1;
+}
+.pix-pro-container.remove-bg.color-box.color-item.add-btn span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(to bottom, #f9f9f9, #ffffff);
+}
+
+.pix-pro-container .remove-bg .color-box .color-item span {
+  display: block;
+  box-sizing: border-box;
+  border: 1px solid #cdd5dd;
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+}
+
+.pix-pro-container .remove-bg .color-box .color-item.transparent span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pix-pro-container .remove-bg .color-box .color-item.transparent span::before {
+  content: "";
+  width: 60px;
+  height: 1px;
+  background-color: red;
+  transform: scale(1.3) rotate(-45deg);
+}
+
+.pix-pro-container .remove-bg .color-box .color-item.active {
+  border-color: #184aff;
+}
+
+.pix-pro-container .image-container {
+  flex: 1;
+  min-width: 400px;
+  background-color: #fafafa;
+  display: flex;
+  flex-direction: column;
+}
+
+.pix-pro-container .image-container .reset-actions,
+.pix-pro-container .image-container .step-actions {
+  position: relative;
+}
+
+.pix-pro-container .image-container .reset-actions:before,
+.pix-pro-container .image-container .step-actions:before {
+  content: "";
+  display: block;
+  width: 1px;
+  height: 60%;
+  background-color: #e0e5ea;
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.pix-pro-container .image-container .image-toolbar {
+  height: 56px;
+  padding: 0 16px 0 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #efefef;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.pix-pro-container .image-container .image-toolbar .toolbar-status {
+  color: #184aff;
+  font-size: 14px;
+}
+
+.pix-pro-container .image-container .image-toolbar .toolbar-box {
+  height: 100%;
+  min-width: 480px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.pix-pro-container .image-container .image-toolbar .toolbar-box > div {
+  padding: 0 10px;
+}
+
+.pix-pro-container .image-container .image-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f9f9f9;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.pix-pro-container .image-container .image-content .image-box {
+  flex: 1;
+  height: 100%;
+  position: relative;
+}
+
+.pix-pro-container .image-container .image-content .image-box .image-loading {
+  box-sizing: border-box;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.7);
+  z-index: 9;
+  font-size: 24px;
+  transition: all 0.3s ease;
+}
+
+.pix-pro-container .image-container .image-content .image-box .image-loading.hide {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.pix-pro-container .image-container .image-content .image-box .main-loading {
+  position: absolute;
+  width: auto;
+  height: auto;
+  padding: 12px 18px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 15;
+  background-color: rgba(30, 30, 30, 0.85);
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(3px);
+  transition: opacity 0.3s ease;
+}
+
+.pix-pro-container .image-container .image-content .image-box .main-loading .progress-bar {
+  position: relative;
+  width: 180px;
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-right: 12px;
+}
+
+.pix-pro-container .image-container .image-content .image-box .main-loading .progress-bar .progress-fill {
+  height: 100%;
+  width: 100%;
+  background-color: #ffffff;
+  border-radius: 2px;
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform 0.3s cubic-bezier(0.33, 1, 0.68, 1);
+  position: relative;
+}
+
+.pix-pro-container .image-container .image-content .image-box .main-loading .progress-percentage {
+  color: #ffffff;
+  font-size: 13px;
+  min-width: 36px;
+  text-align: right;
+  font-weight: 500;
+  font-family: "Arial", sans-serif;
+}
+
+.pix-pro-container .image-container .image-content .image-rotate-box {
+  box-sizing: border-box;
+  padding: 10px;
+  width: 100px;
+}
+
+.pix-pro-container .toolbar-btn {
+  padding: 8px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin: 0 5px;
+  transition: all 0.3s ease;
+}
+
+.pix-pro-container .toolbar-btn:hover {
+  background-color: #fff;
+}
+
+.pix-pro-container .toolbar-btn.primary {
+  background-color: #184aff;
+  border-color: #184aff;
+  color: #fff;
+}
+
+.pix-pro-container .toolbar-btn.primary:hover {
+  background-color: #40a9ff;
+}
+
+.pix-pro-container .toolbar-btn.primary-text {
+  color: #184aff;
+}
+
+.pix-pro-container .toolbar-btn.flip {
+  transform: scaleX(-1);
+}
+
+.pix-pro-container .toolbar-btn.disabled,
+.pix-pro-container .toolbar-btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed !important;
+}
+
+.pix-pro-container .toolbar-btn.disabled:hover,
+.pix-pro-container .toolbar-btn[disabled]:hover {
+  background-color: transparent !important;
+}
+
+.pix-pro-container .toolbar-btn.primary.disabled:hover,
+.pix-pro-container .toolbar-btn.primary[disabled]:hover {
+  background-color: #184aff !important;
+}
+
+.pix-pro-container .icon-btn {
+  padding: 8px;
+  box-sizing: border-box;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  cursor: pointer;
+  border-radius: 8px;
+  margin: 5px 0;
+  transition: all 0.3s ease;
+}
+
+/* .pix-pro-container .icon-btn:hover:not(.disabled) {
+  background-color: #f5f5f5;
+} */
+
+.pix-pro-container .icon-btn i {
+  width: 30px;
+  height: 20px;
+}
+
+.pix-pro-container .icon-btn span {
+  display: inline-block;
+  margin-left: 10px;
+  font-size: 14px;
+}
+
+/* .pix-pro-container .icon-btn.active:not(.disabled) {
+  background-color: #f5f5f5;
+} */
+
+.pix-pro-container .icon-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed !important;
+}
+
+/* .pix-pro-container .icon-btn.disabled:hover {
+  background-color: transparent !important;
+} */
+
+.disabled {
+  opacity: 0.5;
+  pointer-events: all;
+  cursor: not-allowed;
+}
+
+.disabled > * {
+  pointer-events: none;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+span.line {
+  display: block;
+  width: 100%;
+  height: 1px;
+  background-color: #e8e8e8;
+  margin: 20px 0;
+}
+
+.full-screen-blocker {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 21;
+  background-color: transparent;
+  cursor: wait;
+  user-select: none;
+  pointer-events: all;
+}
+
+.icon-btn > i {
+  transform: scale(1.1);
+}
+
+.icon-btn figure {
+  width: 30px;
+  height: 20px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-btn figure i {
+  border-color: #2a3246 !important;
+}
+
+/* 添加容器样式 */
+.container {
+  max-width: 100%;
+  height: 100%;
+  padding: 60px 40px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* 导出图片框样式 */
+.export-img-box {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  padding: 46px;
+  box-sizing: border-box;
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.export-img-box img {
+  width: auto;
+  height: auto;
+  max-width: 80%;
+  max-height: 80%;
+}
+
+/* 添加裁剪比例按钮样式 */
+.crop-ratios {
+  /* display: flex; */
+  /* flex-wrap: wrap; */
+  /* gap: 8px; */
+  /* margin-bottom: 15px; */
+}
+
+.crop-ratio-btn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
+  background-color: transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.crop-ratio-btn:hover {
+  background-color: #f5f5f5;
+}
+
+.crop-ratio-btn.active {
+  background-color: #184aff;
+  color: white;
+  border-color: #184aff;
+}
+
+/* 角度调整容器样式 */
+.angle-adjustment-container {
+  margin: 20px 0;
+}
+
+.angle-adjustment-container h4 {
+  margin-bottom: 10px;
+}
+
+.angle-slider-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.angle-slider {
+  flex: 1;
+  margin-right: 15px;
+}
+
+.angle-value {
+  width: 40px;
+  text-align: center;
+}
+
+.angle-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.angle-btn {
+  flex: 1;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
+  background-color: transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.angle-btn:hover {
+  background-color: #f5f5f5;
+}
+
+/* 翻转控制样式 */
+.flip-control {
+  margin: 20px 0;
+}
+
+.flip-control h4 {
+  margin-bottom: 10px;
+}
+
+.flip-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.flip-btn {
+  flex: 1;
+  padding: 8px;
+  border-radius: 8px;
+  /* border: 1px solid #e8e8e8; */
+  background-color: transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.flip-btn:hover {
+  background-color: #f5f5f5;
+}
+
+/* 尺寸控制样式 */
+.size-control {
+  margin: 20px 0;
+}
+
+.size-input-group {
+  margin-bottom: 15px;
+}
+
+.size-input-group label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.size-input-group input {
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
+  box-sizing: border-box;
+}
+
+.pix-pro-container nav menu > div img {
+  width: 15px;
+  height: 15px;
+  object-fit: contain;
+}
+
+.pix-pro-container .crop .flip-btn button img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+.pix-pro-container .icon-btn img {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+/* 当选项被激活时恢复正常样式 */
+/* .pix-pro-container nav menu > div.disabled-appearance.active {
+  opacity: 1 !important;
+  cursor: pointer !important;
+}
+
+.pix-pro-container nav menu > div.disabled-appearance.active * {
+  cursor: pointer !important;
+} */
+
+/* 禁用外观样式，但保留点击功能 */
+.pix-pro-container nav menu > div.disabled-appearance {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+
+.pix-pro-container nav menu > div.disabled-appearance:hover {
+  background-color: #e6e6e6 !important;
+}
+
+.pix-pro-container nav menu > div.disabled-appearance * {
+  cursor: not-allowed !important;
+}
+
+/* 擦除大小滑块样式 */
+.eraser-size-slider {
+  margin: 20px 0;
+  position: relative;
+}
+
+.eraser-size-slider small {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.eraser-size-slider input[type="range"] {
+  width: 99%;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(to right, #4878ef 0%, #4878ef 50%, #e0e0e0 50%, #e0e0e0 100%);
+  outline: none;
+  opacity: 1;
+  transition: opacity 0.2s;
+}
+
+.eraser-size-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #4878ef;
+  cursor: pointer;
+}
+
+.eraser-size-slider input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #4878ef;
+  cursor: pointer;
+}
+
+.eraser-size-preview-wrapper {
+  margin: 15px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.eraser-size-preview {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: #4878ef;
+  box-shadow: 0 2px 6px rgba(72, 120, 239, 0.3);
+  transition: all 0.2s ease;
+  opacity: 0;
+}
+
+/* 彩色按钮组件样式 */
+colored-btn {
+  display: block;
+  width: 100%;
+}
+
+colored-btn button {
+  width: 100%;
+  padding: 10px;
+  background: linear-gradient(135deg, #4878ef 0%, #6c19ff 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s;
+}
+
+colored-btn button:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+colored-btn button:disabled,
+colored-btn button.disabled {
+  background: linear-gradient(135deg, #cccccc 0%, #999999 100%);
+  cursor: not-allowed;
+}
+
+colored-btn button.loading {
+  position: relative;
+  color: transparent;
+}
+
+colored-btn button.loading::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* 修复section间距 */
+.section {
+  margin-bottom: 20px;
+}
+
+/* 进度条样式 */
+.main-loading {
+  position: absolute;
+  width: auto;
+  height: auto;
+  padding: 12px 18px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 15;
+  background-color: rgba(30, 30, 30, 0.85);
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(3px);
+  transition: opacity 0.3s ease;
+}
+
+.progress-bar {
+  position: relative;
+  width: 180px;
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-right: 12px;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 100%;
+  background-color: #ffffff;
+  border-radius: 2px;
+  transform-origin: left center;
+  transform: scaleX(0);
+  transition: transform 0.3s cubic-bezier(0.33, 1, 0.68, 1);
+  position: relative;
+}
+
+.progress-percentage {
+  color: #ffffff;
+  font-size: 13px;
+  min-width: 36px;
+  text-align: right;
+  font-weight: 500;
+  font-family: "Arial", sans-serif;
+}

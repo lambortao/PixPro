@@ -44,7 +44,7 @@ const baseScale = computed(() => {
     Math.pow(containerSize.value.width, 2) + 
     Math.pow(containerSize.value.height, 2)
   )
-  return diagonal / 2000 * 1.1 // 增加10%安全边距
+  return diagonal / 2000 * 1.2 // 增加10%安全边距
 })
 
 // 基础变换矩阵

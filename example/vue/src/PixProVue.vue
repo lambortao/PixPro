@@ -23,6 +23,7 @@
     @reset="reset" 
     @flip="flip"
     @crop-ratio="handleCropRatio"
+    @show-remind-image="showRemindImage"
     @turn="turn"
     @rotate="handleRotate"
     @color-change="handleColorChange"
@@ -49,10 +50,13 @@ import { onMounted, ref, nextTick, watch } from 'vue';
 import PixProSkin from './PixProSkin/index.vue';
 
 /** 开发包的测试 */
-import PhotoStudio, { type ICropRatio, type IDrawCanvasInfo, type IImageMode } from '../../../src/index';
+// import PhotoStudio, { type ICropRatio, type IDrawCanvasInfo, type IImageMode } from '../../../src/index';
+
+/** packages 包的测试 */
+// import PhotoStudio, { type ICropRatio, type IDrawCanvasInfo, type IImageMode } from '../../../packages/pixpro-core/src/index';
 
 /** 远程包的测试 */
-// import PhotoStudio, { type ICropRatio, type IDrawCanvasInfo, type IImageMode } from '@pixpro/core';
+import PhotoStudio, { type ICropRatio, type IDrawCanvasInfo, type IImageMode } from '@pixpro/core';
 
 const photoStudioContainer = ref<HTMLElement | null>(null);
 
@@ -203,6 +207,11 @@ function initImageStudio() {
   });
 }
 
+/** 是否显示提醒图片 */
+const showRemindImage = (visible: boolean) => {
+  imageStudio.value?.toogleRemindImage(visible)
+}
+
 /**
  * 触发比例裁剪，在 mounted 的时候自动触发，如果发现当前只传了一组比例数据则自动调用 handleCropRatio 方法，否则忽略
  */
@@ -226,8 +235,15 @@ onMounted(() => {
 
 const imageSrc = ref('');
 
-const handleSizeChange = (direction: 'width' | 'height') => {
-  imageStudio.value?.setWidthAndHeight(width.value, height.value, direction);
+const handleSizeChange = (direction: 'width' | 'height', value: number) => {
+  let widthValue = width.value;
+  let heightValue = height.value;
+  if (direction === 'width') {
+    widthValue = value;
+  } else {
+    heightValue = value;
+  }
+  imageStudio.value?.setWidthAndHeight(widthValue, heightValue, direction);
 }
 
 /** 关闭 */
@@ -315,7 +331,19 @@ const switchMode = ({ oldMode, newMode }: { oldMode: string, newMode: string }) 
   console.log('切换模式', oldMode, newMode)
   nowMode.value = newMode
   imageStudio.value?.switchMode(oldMode as IImageMode, newMode as IImageMode);
-  nowLoading.value = true;
+  /**
+   * 以下条件出去的是有 loading 的
+   * 1. 从裁切模式切换到其他模式
+   * 2. 切换到擦除模式
+   * 3. 从移除背景模型切换到其他模式
+   */
+  if (
+    oldMode === 'crop' ||
+    newMode === 'erase' ||
+    oldMode === 'remove-bg'
+  ) {
+    nowLoading.value = true;
+  }
 };
 </script>
 <style scoped>

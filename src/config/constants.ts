@@ -25,8 +25,8 @@ export const MAX_REMOVE_BG_HEIGHT = 5000;
 export const MIN_HD_IMAGE_WIDTH = 256;
 export const MIN_HD_IMAGE_HEIGHT = 256;
 /** 解析度提升最大分辨率 */
-export const MAX_HD_IMAGE_WIDTH = 5000;
-export const MAX_HD_IMAGE_HEIGHT = 5000;
+export const MAX_HD_IMAGE_WIDTH = 3000;
+export const MAX_HD_IMAGE_HEIGHT = 3000;
 
 /** 扩图最小支持的分辨率 */
 export const MIN_EXPAND_IMAGE_WIDTH = 256;

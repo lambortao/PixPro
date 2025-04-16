@@ -1,5 +1,6 @@
 import render from './event';
 import type { IDrawCanvasInfo, IDraggableGripper } from '@/types/IType';
+import { calculateOffsetOverFence } from './utils';
 
 /** 拖拽计算 */
 export default class DragBoundaryCalculator {
@@ -284,32 +285,8 @@ export default class DragBoundaryCalculator {
     }
     /** 拖拽主体 */
     if (gripper === 'body') {
-      if (nowMode === 'crop') {
-        /** 左边界 */
-        if ((this.renderStep.xDomOffset ?? 0) <= 0) {
-          this.renderStep.xDomOffset = 0
-        }
-        /** 上边界 */
-        if ((this.renderStep.yDomOffset ?? 0) <= 0) {
-          this.renderStep.yDomOffset = 0
-        }
-        
-        /** 最大围栏宽度 */
-        const maxFenceWidth = Math.max(this.renderStep.currentDomWidth, this.renderStep.fenceMaxWidth)
-        /** 最大围栏高度 */
-        const maxFenceHeight = Math.max(this.renderStep.currentDomHeight, this.renderStep.fenceMaxHeight)
-
-        const maxXOffset = maxFenceWidth - (this.renderStep.cropBoxWidth ?? 0)
-        const maxYOffset = maxFenceHeight - (this.renderStep.cropBoxHeight ?? 0)
-
-        /** 右边界 */
-        if ((this.renderStep.xDomOffset ?? 0) > maxXOffset) {
-          this.renderStep.xDomOffset = maxXOffset
-        }
-        /** 下边界 */
-        if ((this.renderStep.yDomOffset ?? 0) > maxYOffset) {
-          this.renderStep.yDomOffset = maxYOffset
-        }
+      if (nowMode === 'crop') {        
+        this.renderStep = calculateOffsetOverFence(this.renderStep)
       } else if (nowMode === 'expand') {
         /** 在扩图模式下，主体不允许拖拽 */
         return

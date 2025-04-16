@@ -14,7 +14,7 @@ const SvgIcon: React.FC<SvgIconProps> = ({ name, size = 12, color, className = "
 
   const loadSvg = async () => {
     try {
-      const svg = await import(`./icon/${name}.svg?raw`);
+      const svg = await import(`./assets/icon/${name}.svg?raw`);
       let svgText = svg.default;
 
       if (color) {

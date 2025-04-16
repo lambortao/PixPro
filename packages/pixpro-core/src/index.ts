@@ -316,6 +316,11 @@ class PixPro {
   public async downloadImage() {
     await events.downloadImage();
   }
+
+  /** 设置是否显示提醒图片 */
+  public toogleRemindImage(visible: boolean) {
+    return events.toogleRemindImage(visible);
+  }
 }
 
 export type { ICropRatio, IDrawCanvasInfo, IImageMode }

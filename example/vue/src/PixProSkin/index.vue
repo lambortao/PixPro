@@ -53,20 +53,20 @@
                   <label>宽度 (像素)</label>
                   <input
                     type="number"
-                    v-model="nowWidth"
-                    :disabled="true"
-                    @blur="() => handleSizeChange('width')"
-                    @keyup.enter="() => handleSizeChange('width')"
+                    :value="nowWidth"
+                    :disabled="controlLoading"
+                    @blur="(e) => handleSizeChange('width', e)"
+                    @keyup.enter="(e) => handleSizeChange('width', e)"
                   />
                 </div>
                 <div class="input-group">
                   <label>高度 (像素)</label>
                   <input
                     type="number"
-                    v-model="nowHeight"
-                    :disabled="true"
-                    @blur="() => handleSizeChange('height')"
-                    @keyup.enter="() => handleSizeChange('height')"
+                    :value="nowHeight"
+                    :disabled="controlLoading"
+                    @blur="(e) => handleSizeChange('height', e)"
+                    @keyup.enter="(e) => handleSizeChange('height', e)"
                   />
                 </div>
               </div>
@@ -144,8 +144,8 @@
           <div v-if="activeTab === 'hd'" class="hd">
             <div class="section">
               <colored-btn @click="handleHd" :loading="aiLoading" text="一键提升" :disabled="tooSmallHd || tooLargeHd" />
-              <p class="error-text" v-if="tooSmallHd">图片分辨率需大于 {{ MIN_HD_IMAGE_WIDTH }} x {{ MIN_HD_IMAGE_HEIGHT }} </p>
-              <p class="error-text" v-if="tooLargeHd">图片分辨率需小于 {{ MAX_HD_IMAGE_WIDTH }} x {{ MAX_HD_IMAGE_HEIGHT }} </p>
+              <p class="error-text" v-if="tooLargeHd">图片单边分辨率<br />大于等于 {{ MAX_HD_IMAGE_WIDTH < MAX_HD_IMAGE_HEIGHT ? MAX_HD_IMAGE_WIDTH : MAX_HD_IMAGE_HEIGHT }}px 不适用提升</p>
+              <p class="error-text" v-if="tooSmallHd">图片单边分辨率<br />小于等于 {{ MIN_HD_IMAGE_WIDTH < MIN_HD_IMAGE_HEIGHT ? MIN_HD_IMAGE_WIDTH : MIN_HD_IMAGE_HEIGHT }}px 不适用提升</p>
             </div>
           </div>
           <div v-if="activeTab === 'compress'" class="compress">
@@ -159,7 +159,7 @@
       <div class="image-container">
         <header class="image-toolbar">
           <div class="toolbar-status">
-            <span v-if="nowWidth || nowHeight">目标图片分辨率：{{ nowWidth }} x {{ nowHeight }}</span>
+            <span v-if="nowWidth || nowHeight">当前图片分辨率：{{ nowWidth }} x {{ nowHeight }}</span>
           </div>
           <div class="toolbar-box">
             <div :class="{ 'reset-actions': true, disabled: resetBtnDisabled || controlLoading }">
@@ -198,13 +198,15 @@
         </header>
         <div class="image-content">
           <div class="image-box" ref="imageBoxRef">
-            <AiLoading
-              v-if="aiLoading"
-              class="image-loading"
-              :style="aiLoadingBoxSize"
-              :width="aiLoadingBoxSize.width"
-              :height="aiLoadingBoxSize.height"
-            />
+            <transition name="fade">
+              <AiLoading
+                v-if="aiLoading"
+                class="image-loading"
+                :style="aiLoadingBoxSize"
+                :width="aiLoadingBoxSize.width"
+                :height="aiLoadingBoxSize.height"
+              />
+            </transition>
             <slot></slot>
             <!-- 进度条放在图片区域内 -->
             <transition name="fade">
@@ -218,7 +220,7 @@
             </transition>
           </div>
           <div v-if="activeTab === 'crop' && controlsShow" class="image-rotate-box">
-            <AngleAdjustment v-model="rotateAngle" :max-angle="180"></AngleAdjustment>
+            <AngleAdjustment v-model="rotateAngle" :max-angle="180" @handle-remind-image="showRemindImage"></AngleAdjustment>
           </div>
         </div>
       </div>
@@ -263,88 +265,10 @@ type TabType = 'crop' | 'erase' | 'remove-bg' | 'hd' | 'compress' | 'expand';
 
 const nowLoading = defineModel<boolean>('loading');
 
-const nowWidth = defineModel<number>('width');
-
-const nowHeight = defineModel<number>('height');
-
-const imgCurrentWidth = defineModel<number>('img-current-width');
-
-const imgCurrentHeight = defineModel<number>('img-current-height');
-
-const tooSmallRemoveBg = computed(() => (nowWidth.value ?? 0) < MIN_REMOVE_BG_WIDTH || (nowHeight.value ?? 0) < MIN_REMOVE_BG_HEIGHT)
-
-const tooLargeRemoveBg = computed(() => (nowWidth.value ?? 0) > MAX_REMOVE_BG_WIDTH || (nowHeight.value ?? 0) > MAX_REMOVE_BG_HEIGHT)
-
-
-/** 图片尺寸小于最小解析尺寸 */
-const tooSmallHd = computed(() => {
-  const width = nowWidth.value ?? 0
-  const height = nowHeight.value ?? 0
-  return width < MIN_HD_IMAGE_WIDTH || height < MIN_HD_IMAGE_HEIGHT
-})
-
-/** 图片尺寸大于最大解析尺寸 */
-const tooLargeHd = computed(() => {
-  const width = nowWidth.value ?? 0
-  const height = nowHeight.value ?? 0
-  return width > MAX_HD_IMAGE_WIDTH || height > MAX_HD_IMAGE_HEIGHT
-})
-
-/** 是否允许扩图 */
-const allowExpand = computed(() => {
-  const width = imgCurrentWidth.value ?? 0
-  const height = imgCurrentHeight.value ?? 0
-  return width > MIN_EXPAND_IMAGE_WIDTH && height > MIN_EXPAND_IMAGE_HEIGHT && width < MAX_EXPAND_IMAGE_WIDTH && height < MAX_EXPAND_IMAGE_HEIGHT
-})
-
-/** 图片尺寸小于最小扩图尺寸 */
-const tooSmallExpand = computed(() => {
-  const width = imgCurrentWidth.value ?? 0
-  const height = imgCurrentHeight.value ?? 0
-  return width < MIN_EXPAND_IMAGE_WIDTH || height < MIN_EXPAND_IMAGE_HEIGHT
-})
-
-/** 图片尺寸大于最大扩图尺寸 */
-const tooLargeExpand = computed(() => {
-  const width = imgCurrentWidth.value ?? 0
-  const height = imgCurrentHeight.value ?? 0
-  return width > MAX_EXPAND_IMAGE_WIDTH || height > MAX_EXPAND_IMAGE_HEIGHT
-})
-
-
-/** 是否允许擦除 */
-const allowErase = computed(() => {
-  const width = nowWidth.value ?? 0
-  const height = nowHeight.value ?? 0
-  return width > MIN_ERASE_IMAGE_WIDTH && height > MIN_ERASE_IMAGE_HEIGHT && width < MAX_ERASE_IMAGE_WIDTH && height < MAX_ERASE_IMAGE_HEIGHT
-})
-
-/** 图片尺寸小于最小擦除尺寸 */
-const tooSmallErase = computed(() => {
-  const width = nowWidth.value ?? 0
-  const height = nowHeight.value ?? 0
-  return width < MIN_ERASE_IMAGE_WIDTH || height < MIN_ERASE_IMAGE_HEIGHT
-})
-
-/** 图片尺寸大于最大擦除尺寸 */
-const tooLargeErase = computed(() => {
-  const width = nowWidth.value ?? 0
-  const height = nowHeight.value ?? 0
-  return width > MAX_ERASE_IMAGE_WIDTH || height > MAX_ERASE_IMAGE_HEIGHT
-})
-
-
-/** 进度条相关逻辑 */
-const { showProgressBar, progress } = useProgressBar(nowLoading);
-
-const cropData = ref({
-  proportions: 'none',
-  width: 0,
-  height: 0,
-  rotate: 0
-})
 
 const props = defineProps<{
+  width: number;
+  height: number;
   aiLoading: boolean;
   isOperate: boolean;
   stepIndex: number;
@@ -361,6 +285,65 @@ const props = defineProps<{
     default: number;
   };
 }>();
+
+const nowWidth = computed(() => props.width);
+
+const nowHeight = computed(() => props.height);
+
+const imgCurrentWidth = defineModel<number>('img-current-width');
+
+const imgCurrentHeight = defineModel<number>('img-current-height');
+
+const tooSmallRemoveBg = computed(() => (nowWidth.value ?? 0) < MIN_REMOVE_BG_WIDTH || (nowWidth.value ?? 0) < MIN_REMOVE_BG_HEIGHT)
+
+const tooLargeRemoveBg = computed(() => (nowWidth.value ?? 0) > MAX_REMOVE_BG_WIDTH || (nowWidth.value ?? 0) > MAX_REMOVE_BG_HEIGHT)
+
+
+/** 图片尺寸小于最小解析尺寸 */
+const tooSmallHd = computed(() => {
+  const width = nowWidth.value ?? 0
+  const height = nowWidth.value ?? 0
+  return width < MIN_HD_IMAGE_WIDTH || height < MIN_HD_IMAGE_HEIGHT
+})
+
+/** 图片尺寸大于最大解析尺寸 */
+const tooLargeHd = computed(() => {
+  const width = nowWidth.value ?? 0
+  const height = nowWidth.value ?? 0
+  return width >= MAX_HD_IMAGE_WIDTH || height >= MAX_HD_IMAGE_HEIGHT
+})
+
+/** 图片尺寸小于最小扩图尺寸 */
+const tooSmallExpand = computed(() => {
+  const width = imgCurrentWidth.value ?? 0
+  const height = imgCurrentHeight.value ?? 0
+  return width < MIN_EXPAND_IMAGE_WIDTH || height < MIN_EXPAND_IMAGE_HEIGHT
+})
+
+/** 图片尺寸大于最大扩图尺寸 */
+const tooLargeExpand = computed(() => {
+  const width = imgCurrentWidth.value ?? 0
+  const height = imgCurrentHeight.value ?? 0
+  return width > MAX_EXPAND_IMAGE_WIDTH || height > MAX_EXPAND_IMAGE_HEIGHT
+})
+
+/** 图片尺寸小于最小擦除尺寸 */
+const tooSmallErase = computed(() => {
+  const width = nowWidth.value ?? 0
+  const height = nowWidth.value ?? 0
+  return width < MIN_ERASE_IMAGE_WIDTH || height < MIN_ERASE_IMAGE_HEIGHT
+})
+
+/** 图片尺寸大于最大擦除尺寸 */
+const tooLargeErase = computed(() => {
+  const width = nowWidth.value ?? 0
+  const height = nowWidth.value ?? 0
+  return width > MAX_ERASE_IMAGE_WIDTH || height > MAX_ERASE_IMAGE_HEIGHT
+})
+
+/** 进度条相关逻辑 */
+const { showProgressBar, progress } = useProgressBar(nowLoading);
+
 
 const eraserDefaultSize = defineModel<number>('eraser-default-size', {
   type: Number,
@@ -457,13 +440,40 @@ const aiLoadingBoxSize = computed(() => {
   }
 })
 
+/** 扩展的最低阈值 */
+const MIN_EXPAND_RATIO = 0.01
 /** 根据拖拽的情况来判断扩展按钮是否可以点击 */
-const expandImageBtnStatus = computed(() => 
-  (currentStep.value.cropBoxHeight).toFixed(4) === (currentStep.value.fenceMinHeight).toFixed(4) 
-  && (currentStep.value.cropBoxWidth).toFixed(4) === (currentStep.value.fenceMinWidth).toFixed(4)
-  && currentStep.value.xDomOffset === 0
-  && currentStep.value.yDomOffset === 0
-)
+const expandImageBtnStatus = computed(() => {
+  const {
+    cropBoxHeight,
+    cropBoxWidth,
+    currentDomHeight,
+    currentDomWidth,
+    xDomOffset,
+    yDomOffset
+  } = currentStep.value
+
+  /** 向左扩展 */
+  const expansion_ratio_left = xDomOffset ? (((Math.abs(xDomOffset) ?? 1) / currentDomWidth)) : 0;
+  /** 向上扩展 */
+  const expansion_ratio_top = yDomOffset ? (((Math.abs(yDomOffset) ?? 1) / currentDomHeight)) : 0;
+  /** 向右扩展 */
+  const expansion_ratio_right = ((cropBoxWidth - currentDomWidth - Math.abs(xDomOffset ?? 1)) / currentDomWidth);
+  /** 向下扩展 */
+  const expansion_ratio_bottom = ((cropBoxHeight - currentDomHeight - Math.abs(yDomOffset ?? 1)) / currentDomHeight);
+
+  return (
+    expansion_ratio_left < MIN_EXPAND_RATIO &&
+    expansion_ratio_top < MIN_EXPAND_RATIO &&
+    expansion_ratio_right < MIN_EXPAND_RATIO &&
+    expansion_ratio_bottom < MIN_EXPAND_RATIO
+  )
+})
+
+/** 是否显示提醒图片 */
+const showRemindImage = (visible: boolean) => {
+  emit('show-remind-image', visible);
+}
 
 /** 禁用恢复原图按钮和返回上一步按钮 */
 const resetBtnDisabled = computed(() => currentStepIndex.value < 1);
@@ -490,6 +500,7 @@ const emit = defineEmits([
   'switch-mode',
   'hd',
   'color-change',
+  'show-remind-image',
   'handleSizeChange',
   'handleDownloadImage'
 ]);
@@ -509,8 +520,16 @@ function handleHeaderControl(key: 'reset' | 'forward' | 'rollback') {
   emit(key);
 }
 
-function handleSizeChange(direction: 'width' | 'height') {
-  emit('handleSizeChange', direction);
+function handleSizeChange(direction: 'width' | 'height', e: Event) {
+  const targetValue = parseInt((e.target as HTMLInputElement).value)
+  if (targetValue) {
+    if (direction === 'width' && targetValue !== nowWidth.value) {
+      emit('handleSizeChange', direction, targetValue);
+    }
+    if (direction === 'height' && targetValue !== nowHeight.value) {
+      emit('handleSizeChange', direction, targetValue);
+    }
+  }
 }
 
 const controlText = ref(controlTextData)
@@ -654,4 +673,3 @@ function getRatioStyle(ratio: number): Record<string, string> {
   }
 }
 </style>
-

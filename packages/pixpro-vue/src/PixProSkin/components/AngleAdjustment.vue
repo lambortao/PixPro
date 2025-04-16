@@ -32,19 +32,29 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import SvgIcon from './SvgIcon.vue';
+import { debounce } from 'lodash-es';
 
 const model = defineModel<number>({ default: 0 });
-
 const props = defineProps<{
   maxAngle: number;
   snapThreshold?: number;
+  snapAngles?: number[]
 }>();
 
 const maxAngle = ref(props.maxAngle);
-const snapThreshold = ref(props.snapThreshold ?? 5);
+const snapThreshold = ref(props.snapThreshold ?? 1);
+/** 速度因子，值越大移动越慢 */
+const speedFactor = ref(3);
+/** 需要吸附的角度数组，默认只有0度 */
+const snapAngles = ref([-90, -60, -45, -30, -15 , 0, 15, 30, 45, 60, 90]);
 const isSnapping = ref(false);
+const isScrolling = ref(false);
+
+const emits = defineEmits<{
+  (e: 'handle-remind-image', visible: boolean): void
+}>()
 
 // 是否正在拖动
 const isDragging = ref(false);
@@ -52,6 +62,42 @@ const isDragging = ref(false);
 const startY = ref(0);
 // 拖动开始时的角度
 const startAngle = ref(0);
+
+// 添加DOM元素引用
+const remindImage = ref<HTMLElement | null>(null);
+const containerCanvas = ref<HTMLElement | null>(null);
+
+// 在组件挂载后获取DOM元素
+onMounted(() => {
+  remindImage.value = document.querySelector('#remind-image');
+  containerCanvas.value = document.querySelector('#container-canvas');
+});
+
+// 添加和移除过渡效果的函数
+const addTransition = () => {
+  if (remindImage.value) {
+    remindImage.value.style.transition = 'transform 80ms ease';
+  }
+  if (containerCanvas.value) {
+    containerCanvas.value.style.transition = 'transform 80ms ease';
+  }
+};
+
+const removeTransition = () => {
+  if (remindImage.value) {
+    remindImage.value.style.transition = '';
+  }
+  if (containerCanvas.value) {
+    containerCanvas.value.style.transition = '';
+  }
+};
+
+// 创建防抖函数，延迟300ms后隐藏提醒图片
+const hideRemindImage = debounce(() => {
+  isScrolling.value = false;
+  emits('handle-remind-image', false);
+  removeTransition();
+}, 500);
 
 // 计算标尺容器的位移
 const rulerStyle = computed(() => {
@@ -70,12 +116,16 @@ const rulerStyle = computed(() => {
 
 // 添加吸附检查函数
 const checkSnap = (angle: number): number => {
-  if (Math.abs(angle) <= snapThreshold.value) {
-    isSnapping.value = true;
-    setTimeout(() => {
-      isSnapping.value = false;
-    }, 200);
-    return 0;
+  // 遍历所有需要吸附的角度
+  for (const snapAngle of snapAngles.value) {
+    // 检查当前角度是否在吸附阈值范围内
+    if (Math.abs(angle - snapAngle) <= snapThreshold.value) {
+      isSnapping.value = true;
+      setTimeout(() => {
+        isSnapping.value = false;
+      }, 200);
+      return snapAngle;
+    }
   }
   isSnapping.value = false;
   return angle;
@@ -85,13 +135,25 @@ const checkSnap = (angle: number): number => {
 const handleWheel = (e: WheelEvent) => {
   e.preventDefault();
   
-  // 根据当前角度是否在吸附范围内动态调整粒度
-  const step = Math.abs(model.value) <= snapThreshold.value ? 6 : 3;
-  const direction = e.deltaY > 0 ? 1 : -1; // 反向滚动方向
-  const newValue = Math.max(-maxAngle.value/2, Math.min(maxAngle.value/2, model.value + direction * step));
-  
   // 如果正在吸附动画中，不处理滚轮事件
   if (isSnapping.value) return;
+  
+  // 如果之前没有在滚动，则显示提醒图片并添加过渡效果
+  if (!isScrolling.value) {
+    isScrolling.value = true;
+    emits('handle-remind-image', true);
+    addTransition();
+  }
+  
+  // 重置防抖计时器
+  hideRemindImage();
+  
+  // 根据当前角度是否在吸附范围内动态调整粒度
+  let step = Math.abs(model.value) <= snapThreshold.value ? 6 : 3;
+  // 应用速度因子，speedFactor越大，每次移动的角度越小
+  step = step / speedFactor.value;
+  const direction = e.deltaY > 0 ? 1 : -1; // 反向滚动方向
+  const newValue = Math.max(-maxAngle.value/2, Math.min(maxAngle.value/2, model.value + direction * step));
   
   // 检查是否需要吸附
   const snappedValue = checkSnap(newValue);
@@ -107,13 +169,16 @@ const startDrag = (e: MouseEvent) => {
   isDragging.value = true;
   startY.value = e.clientY;
   startAngle.value = model.value;
+  emits('handle-remind-image', true);
+  addTransition();
 };
 
 // 处理拖动
 const handleDrag = (e: MouseEvent) => {
   if (!isDragging.value) return;
   const deltaY = startY.value - e.clientY; // 反向拖拽方向
-  const newAngle = startAngle.value + Math.round(deltaY / 3);
+  // 应用速度因子，speedFactor越大，拖拽灵敏度越低
+  const newAngle = startAngle.value + Math.round(deltaY / (3 * speedFactor.value));
   model.value = checkSnap(Math.max(-maxAngle.value/2, Math.min(maxAngle.value/2, newAngle)));
 };
 
@@ -124,6 +189,8 @@ const stopDrag = () => {
     if (snappedValue !== model.value) {
       model.value = snappedValue;
     }
+    emits('handle-remind-image', false);
+    removeTransition();
   }
   isDragging.value = false;
 };

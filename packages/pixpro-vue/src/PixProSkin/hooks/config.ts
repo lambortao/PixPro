@@ -8,7 +8,7 @@ export const controlTextData = {
   expand: {
     btn: '扩图',
     title: '扩图',
-    desc: '向外扩展图片，AI将填充图片以外的部分。',
+    desc: '向外扩展图片，AI将填充图片以外的部分',
     icon: 'expand-btn'
   },
   erase: {
@@ -20,13 +20,13 @@ export const controlTextData = {
   'remove-bg': {
     btn: '移除背景',
     title: '移除背景',
-    desc: '一键抠出图片中的主体。',
+    desc: '一键抠出图片中的主体',
     icon: 'remove-bg-btn'
   },
   hd: {
     btn: '提升解析度',
     title: '提升解析度',
-    desc: '最大可提升至 3200 x 3200',
+    desc: '立即提提升图片解析度',
     icon: 'hd-btn'
   }
 }
@@ -89,8 +89,8 @@ export const MAX_REMOVE_BG_HEIGHT = 5000;
 export const MIN_HD_IMAGE_WIDTH = 256;
 export const MIN_HD_IMAGE_HEIGHT = 256;
 /** 解析度提升最大分辨率 */
-export const MAX_HD_IMAGE_WIDTH = 5000;
-export const MAX_HD_IMAGE_HEIGHT = 5000;
+export const MAX_HD_IMAGE_WIDTH = 3000;
+export const MAX_HD_IMAGE_HEIGHT = 3000;
 
 /** 扩图最小支持的分辨率 */
 export const MIN_EXPAND_IMAGE_WIDTH = 256;

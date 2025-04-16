@@ -31,10 +31,10 @@ import {
   removeBase64Header,
   addBase64Header,
   canvasToGrayBase64,
-  getWidthForHeigth,
-  getHeightForWidth,
   getNewWHXYData,
-  calculateExpandBoxUniversal
+  calculateExpandBoxUniversal,
+  getCropBoxAndAttachmentWH,
+  calculateOffsetOverFence
 } from './utils';
 import {
   CANVAS_RENDER_MIN_HEIGHT,
@@ -367,7 +367,6 @@ class Renderer {
   public async renderImageToCanvas(step: IDrawCanvasInfo, turn: number = 0) {
     const nowImages = this.imagesList[step.imgId];
     const tempImage = new Image();
-    console.log('nowImages', nowImages)
 
     await new Promise((resolve) => {
       tempImage.onload = resolve;
@@ -913,51 +912,97 @@ class Renderer {
   /** 手动设置宽高 */
   public setWidthAndHeight(width: number, height: number, mainDirection: 'width' | 'height' = 'width') {
     const nowStep = { ...this.getNowStep() };
-    let nowWidth = width * (nowStep.cdProportions ?? 1)
-    let nowHeight = height * (nowStep.cdProportions ?? 1)
-
+    /** 根据getWH函数的逻辑反向计算 */
+    let nowWidth = (nowStep.currentDomWidth * width) / nowStep.rawImgWidth;
+    let nowHeight = (nowStep.currentDomHeight * height) / nowStep.rawImgHeight;
+    
     if (nowWidth === nowStep.cropBoxWidth && nowHeight === nowStep.cropBoxHeight) return;
 
-    if (nowWidth > nowStep.fenceMaxWidth) {
-      nowWidth = nowStep.fenceMaxWidth
-    }
-    if (nowHeight > nowStep.fenceMaxHeight) {
-      nowHeight = nowStep.fenceMaxHeight
-    }
-
     if (nowWidth < nowStep.fenceMinWidth) {
-      nowWidth = nowStep.fenceMinWidth
-      nowStep.xDomOffset = 0
+      nowWidth = nowStep.fenceMinWidth;
+      nowStep.xDomOffset = 0;
     }
     if (nowHeight < nowStep.fenceMinHeight) {
-      nowHeight = nowStep.fenceMinHeight
-      nowStep.yDomOffset = 0
+      nowHeight = nowStep.fenceMinHeight;
+      nowStep.yDomOffset = 0;
     }
 
-    /** 是否为按比例裁切的状态 */
-    if (nowStep.cropRatio != null) {
-      if (mainDirection === 'height') {
-        const { width, height, xDomOffset, yDomOffset } = getWidthForHeigth(nowStep, nowHeight, this.rawDomSize!)
-        nowWidth = width
-        nowHeight = height
-        nowStep.xDomOffset = xDomOffset
-        nowStep.yDomOffset = yDomOffset
+    if (nowStep.mode === 'expand') {
+      console.log(nowWidth, nowHeight, nowStep)
+      if (nowWidth > nowStep.fenceMaxWidth) {
+        nowWidth = nowStep.fenceMaxWidth;
+      }
+      if (nowHeight > nowStep.fenceMaxHeight) {
+        nowHeight = nowStep.fenceMaxHeight;
       }
       if (mainDirection === 'width') {
-        const { width, height, xDomOffset, yDomOffset } = getHeightForWidth(nowStep, nowWidth, this.rawDomSize!)
-        nowWidth = width
-        nowHeight = height
-        nowStep.xDomOffset = xDomOffset
-        nowStep.yDomOffset = yDomOffset
+        nowStep.cropBoxWidth = nowWidth
+        nowStep.xDomOffset = -((nowWidth - nowStep.currentDomWidth) / 2)
+      } else if (mainDirection === 'height') {
+        nowStep.cropBoxHeight = nowHeight
+        nowStep.yDomOffset = -((nowHeight - nowStep.currentDomHeight) / 2)
       }
-      console.log('按比例裁切', nowStep.cropRatio, mainDirection, nowWidth, nowHeight)
+
+      if (nowStep.cropRatio != null) {
+        if (mainDirection === 'width') {
+          nowStep.cropBoxHeight = nowStep.cropBoxWidth / nowStep.cropRatio!
+          if (nowStep.cropBoxHeight > nowStep.fenceMaxHeight) {
+            nowStep.cropBoxHeight = nowStep.fenceMaxHeight
+            nowStep.cropBoxWidth = nowStep.cropBoxHeight * nowStep.cropRatio!
+          }
+          if (nowStep.cropBoxHeight < nowStep.fenceMinHeight) {
+            nowStep.cropBoxHeight = nowStep.fenceMinHeight
+            nowStep.cropBoxWidth = nowStep.cropBoxHeight * nowStep.cropRatio!
+          }
+          nowStep.xDomOffset = -((nowStep.cropBoxWidth - nowStep.currentDomWidth) / 2)
+          nowStep.yDomOffset = -((nowStep.cropBoxHeight - nowStep.currentDomHeight) / 2)
+        } else if (mainDirection === 'height') {
+          nowStep.cropBoxWidth = nowStep.cropBoxHeight * nowStep.cropRatio!
+          if (nowStep.cropBoxWidth > nowStep.fenceMaxWidth) {
+            nowStep.cropBoxWidth = nowStep.fenceMaxWidth
+            nowStep.cropBoxHeight = nowStep.cropBoxWidth / nowStep.cropRatio!
+          }
+          if (nowStep.cropBoxWidth < nowStep.fenceMinWidth) {
+            nowStep.cropBoxWidth = nowStep.fenceMinWidth
+            nowStep.cropBoxHeight = nowStep.cropBoxWidth / nowStep.cropRatio!
+          }
+          nowStep.xDomOffset = -((nowStep.cropBoxWidth - nowStep.currentDomWidth) / 2)
+          nowStep.yDomOffset = -((nowStep.cropBoxHeight - nowStep.currentDomHeight) / 2)
+        }
+      } 
+      this.handleStepGroup(nowStep);
+      this.handleStepList(nowStep);
+    } else if (nowStep.mode === 'crop') {
+
+      if (nowWidth > nowStep.currentDomWidth) {
+        nowWidth = nowStep.currentDomWidth;
+      }
+      if (nowHeight > nowStep.currentDomHeight) {
+        nowHeight = nowStep.currentDomHeight;
+      }
+      
+      /** 是否为按比例裁切的状态 */
+      if (nowStep.cropRatio != null) {
+        if (mainDirection === 'height') {
+          nowWidth = nowStep.cropBoxWidth / (nowStep.cropBoxHeight / nowHeight)
+        }
+        if (mainDirection === 'width') {
+          nowHeight = nowStep.cropBoxHeight / (nowStep.cropBoxWidth / nowWidth)
+        }
+      }
+
+      // 设置裁切框的新尺寸
+      nowStep.cropBoxWidth = nowWidth;
+      nowStep.cropBoxHeight = nowHeight;
+      
+      // 应用getCropBoxAndAttachmentWH进行撑满屏幕处理
+      let newStep = getCropBoxAndAttachmentWH(nowStep, this.rawDomSize!, mainDirection);
+
+      /** 判断围栏是否超限 */
+      newStep = calculateOffsetOverFence(newStep)
+      this.handleStepGroup(newStep);
+      this.handleStepList(newStep);
     }
-
-
-    nowStep.cropBoxWidth = nowWidth
-    nowStep.cropBoxHeight = nowHeight
-    this.handleStepGroup(nowStep);
-    this.handleStepList(nowStep);
   }
 
   /** 添加设置回调的方法 */
@@ -970,7 +1015,7 @@ class Renderer {
     this.onStepChangeCallback = callback;
     this.onFinish = onFinish;
     this.isDev = isDev;
-    this.realTimeChange = realTimeChange;
+    this.realTimeChange = realTimeChange; 
   }
 
   /** 旋转 */
@@ -1374,6 +1419,18 @@ class Renderer {
     return base64
   }
 
+  /**
+ * 获取实时的宽高
+ */
+ public getWH(step: IDrawCanvasInfo) {
+  const wMultiplied = step.currentDomWidth / step.cropBoxWidth
+  const hMultiplied = step.currentDomHeight / step.cropBoxHeight
+  return {
+    currentWidth: Math.round(step.rawImgWidth / (wMultiplied ?? 1)),
+    currentHeight: Math.round(step.rawImgHeight / (hMultiplied ?? 1))
+  }
+}
+
   /** 扩图 */
   public expandImage(nowStep: IDrawCanvasInfo, hasProportions = true) {
     /** 显示操作框 */
@@ -1384,6 +1441,9 @@ class Renderer {
     
     /** 计算扩图模式下原图的最大尺寸 */
     const { rawImgWidth, rawImgHeight, cdProportions } = this.getExpandImageMaxWH(nowStep, cropBoxWidth)
+
+    const oldRawImgWidth = nowStep.rawImgWidth
+    const oldRawImgHeight = nowStep.rawImgHeight
 
     /** 设置图片和裁切框的大小 */
     nowStep.cropBoxWidth = cropBoxWidth
@@ -1414,6 +1474,17 @@ class Renderer {
       nowStep.cdProportions = cdProportions
     }
 
+    if (oldRawImgWidth - rawImgWidth > 1 || oldRawImgHeight - rawImgHeight > 1) {
+      const { currentWidth, currentHeight } = this.getWH(nowStep)
+      const weakTip = new WeakTip({
+        text: `原图分辨率已经超过最大扩图限制，该图在扩图板块的分辨率已压缩至 ${currentWidth} x ${currentHeight}`,
+        duration: 5000,
+        fadeOutDuration: 200,
+        storageKey: 'PIXPRO_EXPAND_IMAGE_TIP',
+        maxShowCount: 3
+      })
+      weakTip.show()
+    }
     return nowStep
   }
 
@@ -1501,6 +1572,9 @@ class Renderer {
       this.setNowStepDom(newStep);
       await this.renderImageToCanvas(newStep)
       this.realTimeChange && this.realTimeChange(newStep);
+
+      /** 显示把手 */
+      removeClass(this.curtainDom as HTMLElement, 'hide');
 
       // 添加确认扩展弹窗
       const confirmExpandWrapper = document.createElement('div');
@@ -1715,6 +1789,9 @@ class Renderer {
       /** 向下扩展 */
       const expansion_ratio_bottom = ((cropBoxHeight - currentDomHeight - Math.abs(yDomOffset ?? 1)) / currentDomHeight);
 
+      /** 隐藏把手 */
+      addClass(this.curtainDom as HTMLElement, 'hide');
+
       /** 扩图保留小数点后 6 位 */
       const result = await httpClient.post(this.routes, {
         file: removeBase64Header(this.imagesList[imgId].base64),
@@ -1730,6 +1807,8 @@ class Renderer {
       if (result.code === 0) {
         this.handleResult(result.data.image, 'expand')
       } else {
+        /** 显示把手 */
+        removeClass(this.curtainDom as HTMLElement, 'hide');
         alert(result?.msg || '操作失败！')
         this.onFinish && this.onFinish()
         throw new Error(result)

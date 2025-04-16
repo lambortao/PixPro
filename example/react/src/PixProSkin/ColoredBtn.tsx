@@ -1,6 +1,6 @@
 import React from "react";
 import SvgIcon from "./SvgIcon";
-import "./_constant.less";
+import "./assets/style/_constant.less";
 import "./ColoredBtn.less";
 
 interface ColoredBtnProps {

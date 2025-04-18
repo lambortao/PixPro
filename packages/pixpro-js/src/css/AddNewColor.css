@@ -1,0 +1,56 @@
+.add-color-item {
+  width: 50px;
+  height: 50px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  padding: 3px;
+  box-sizing: border-box;
+  position: relative;
+}
+.add-color-item span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  border: 1px solid #cdd5dd;
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  overflow: hidden;
+  background: linear-gradient(to bottom, #f9f9f9, #ffffff);
+}
+.add-color-item .color-select {
+  box-sizing: border-box;
+  padding: 10px;
+  border-radius: 8px;
+  position: absolute;
+  width: 180px;
+  top: 0px;
+  left: 50px;
+  z-index: 9999;
+  cursor: auto;
+  box-shadow: 0 0 10px 0 rgba(0, 0, 0, 0.2);
+  background-color: #fff;
+}
+.add-color-item .color-select input {
+  cursor: pointer;
+  width: 100%;
+}
+.add-color-item .color-select p {
+  font-size: 12px;
+  color: #666;
+  margin: 0 0 5px;
+  text-align: center;
+}
+
+.add-color-item .color-select footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 5px;
+}
+.add-color-item .color-select footer .toolbar-btn {
+  width: 100%;
+  padding: 5px 10px !important;
+  margin-top: 10px !important;
+}

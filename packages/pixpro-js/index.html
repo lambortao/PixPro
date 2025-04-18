@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pix Pro For JS Example</title>
+  <style>
+    .fade-enter-active,
+    .fade-leave-active {
+      transition: opacity 0.2s ease;
+    }
+
+    .fade-enter-from,
+    .fade-leave-to {
+      opacity: 0;
+    }
+
+    .upload-container {
+      padding: 20px;
+    }
+
+    .upload-button {
+      padding: 12px 24px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .upload-button .el-icon {
+      margin-right: 8px;
+    }
+
+    .export-img-box {
+      max-width: 80vw;
+      max-height: 80vw;
+      margin: 20px auto;
+      overflow: hidden;
+    }
+
+    .export-img-box img {
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    .buttons-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 20px;
+    }
+
+    .buttons-container .action-btn {
+      margin: 0 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="upload-box">
+    <div class="upload-container">
+      <input type="file" id="fileInput" accept="image/*" class="file-input" style="display: none" />
+      <button id="uploadButton" class="upload-button">
+        点击上传图片
+      </button>
+    </div>
+  </div>
+
+  <script type="module" src="./src/js/index.js"></script>
+  <script type="module">
+    // 用户 token
+    // token: string
+    // 请求 host
+    // host: string
+    // 裁剪比例
+    // cropRatios ?: Record < string, number >
+    // 初始图片
+    // fitstImage ?: File | null
+    // 开启下载按钮
+    // showDownloadBtn ?: boolean
+    // 请求 route
+    // routes ?: string
+    // 橡皮擦大小
+    // eraserSize ?: {
+    //   min: number
+    //   max: number
+    //   default: number
+    // }
+    // const editor = new PhotoEditor();
+    const pixProAttrs = {
+      token: "",
+      host: "https://api.pixpro.cc/",
+      cropRatios: {
+        original: 0,
+        "1:1": 1,
+        "3:4": 3 / 4,
+        "4:3": 4 / 3,
+        "9:16": 9 / 16,
+        "16:9": 16 / 9,
+      },
+      fitstImage: null,
+      showDownloadBtn: false,
+      routes: "/image/processing",
+      eraserSize: {
+        min: 20,
+        max: 100,
+        default: 50,
+      }
+    }
+    let editor = null;
+    const uploadButton = document.getElementById("uploadButton");
+    uploadButton.addEventListener("click", triggerFileInput);
+    function triggerFileInput() {
+      fileInput.click();
+    }
+    const fileInput = document.getElementById("fileInput");
+    // 上传图片
+    fileInput.addEventListener("change", (e) => {
+      const target = event.target;
+      if (target.files && target.files.length > 0) {
+        const file = target.files[0];
+        if (file.type.startsWith('image/')) {
+          pixProAttrs.fitstImage = file;
+          togglePixProVisible()
+          target.value = '';
+        } else {
+          alert('请选择图片文件');
+        }
+      }
+    })
+    let pixProVisible = false;
+    const pixProVisibleProxy = new Proxy({ value: pixProVisible }, {
+      set(target, key, value) {
+        target[key] = value;
+        if (value) {
+          editor = new PhotoEditor(pixProAttrs, togglePixProVisible);
+        } else {
+          if (editor) {
+            editor = null;
+          }
+        }
+        return true;
+      }
+    });
+    function togglePixProVisible(visible) {
+      pixProVisibleProxy.value = visible ?? !pixProVisibleProxy.value;
+    }
+  </script>
+</body>
+
+</html>

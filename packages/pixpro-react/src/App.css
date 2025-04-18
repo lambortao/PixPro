@@ -1,0 +1,46 @@
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.upload-container {
+  padding: 20px;
+}
+
+.upload-button {
+  padding: 12px 24px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.upload-button .el-icon {
+  margin-right: 8px;
+}
+
+.export-img-box {
+  max-width: 80vw;
+  max-height: 80vw;
+  margin: 20px auto;
+  overflow: hidden;
+}
+
+.export-img-box img {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.buttons-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.buttons-container .action-btn {
+  margin: 0 10px;
+}

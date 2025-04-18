@@ -1,0 +1,33 @@
+small {
+  display: block;
+  margin: 20px 0 10px;
+}
+
+input {
+  width: 100%;
+  -webkit-appearance: none; /* Safari */
+  appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  outline: none;
+  opacity: 1;
+  transition: opacity 0.2s;
+}
+
+input::-webkit-slider-thumb {
+  -webkit-appearance: none; /* Safari */
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #4878ef;
+  cursor: pointer;
+}
+
+input::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #4878ef;
+  cursor: pointer;
+}

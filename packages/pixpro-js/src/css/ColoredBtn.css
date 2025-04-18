@@ -1,0 +1,33 @@
+/* ColoredBtn 样式 */
+.colored-btn {
+  margin: 20px auto;
+  width: 128px;
+  height: 36px;
+  border-radius: 8px;
+  border: none;
+  color: #fff;
+  background: linear-gradient(to right, #184aff 0%, #fc9bff 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.colored-btn svg {
+  color: #fff;
+}
+
+.colored-btn:active {
+  transform: scale(0.97);
+}
+
+.colored-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.colored-btn.loading {
+  opacity: 0.7;
+}

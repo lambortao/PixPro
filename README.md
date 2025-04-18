@@ -39,6 +39,21 @@ Vue3 UI 套件
 npm install @pixpro/vue
 ```
 
+React UI 套件
+```bash
+npm install @pixpro/react
+```
+
+Vue2 UI 套件
+```bash
+npm install @pixpro/vue2
+```
+
+原生 JavaScript UI 套件
+```bash
+克隆该库，从 packages/pixpro-js/ 目录下取用引入即可
+```
+
 ## 功能
 
 ### 基础功能
@@ -148,6 +163,141 @@ const handleClose = () => {
   height: 600px;
 }
 </style>
+```
+
+### React UI 套件
+```tsx
+import { PixProReact } from "@pixpro/react";
+import "@pixpro/react/dist/style.css";
+
+const [pixProAttrs, setPixProAttrs] = useState({
+  cropRatios: {
+    original: 0,
+    "1:1": 1,
+    "3:4": 3 / 4,
+    "4:3": 4 / 3,
+    "9:16": 9 / 16,
+    "16:9": 16 / 9,
+  },
+  host: "xxx",
+  routes: "/image/processing",
+  token: "",
+  fitstImage: null as File | null,
+  showDownloadBtn: true,
+  eraserSize: {
+    min: 20,
+    max: 100,
+    default: 50,
+  },
+});
+
+return (
+  <PixProReact {...pixProAttrs} />
+)
+
+<style>
+.editor-container {
+  width: 100%;
+  height: 600px;
+}
+</style>
+```
+
+### Vue2 UI 套件
+```vue
+<template>
+  <div class="editor-container">
+    <pix-pro-vue v-bind="pixProAttrs" @handle-close="togglePixProVisible(false)" @handle-export-image="handleExportImage" />
+  </div>
+</template>
+
+<script>
+import { PixProVue } from '@pixpro/vue'
+import '@pixpro/vue/dist/index.css'
+
+export default {
+  name: "UploadBox",
+  components: {
+    PixProVue,
+  },
+  data() {
+    return {
+      pixProVisible: false,
+      imageSrc: "",
+      fileInput: null,
+      pixProAttrs: {
+        cropRatios: {
+          original: 0,
+          "1:1": 1,
+          "3:4": 3 / 4,
+          "4:3": 4 / 3,
+          "9:16": 9 / 16,
+          "16:9": 16 / 9,
+        },
+        host: "",
+        routes: "",
+        token: "",
+        fitstImage: null,
+        showDownloadBtn: true,
+        eraserSize: {
+          min: 20,
+          max: 100,
+          default: 50,
+        },
+      },
+    };
+  }
+};
+</script>
+```
+
+### 原生 JavaScript 套件
+```html
+<input type="file" id="fileInput" accept="image/*" class="file-input" />
+<script type="module" src="./src/js/index.js"></script>
+<script>
+  const pixProAttrs = {
+    token: "",
+    host: "https://api.pixpro.cc/",
+    cropRatios: {
+      original: 0,
+      "1:1": 1,
+      "3:4": 3 / 4,
+      "4:3": 4 / 3,
+      "9:16": 9 / 16,
+      "16:9": 16 / 9,
+    },
+    fitstImage: null,
+    showDownloadBtn: false,
+    routes: "/image/processing",
+    eraserSize: {
+      min: 20,
+      max: 100,
+      default: 50,
+    }
+  }
+  let editor = null;
+  const uploadButton = document.getElementById("uploadButton");
+  uploadButton.addEventListener("click", triggerFileInput);
+  function triggerFileInput() {
+    fileInput.click();
+  }
+  const fileInput = document.getElementById("fileInput");
+  // 上传图片
+  fileInput.addEventListener("change", (e) => {
+    const target = event.target;
+    if (target.files && target.files.length > 0) {
+      const file = target.files[0];
+      if (file.type.startsWith('image/')) {
+        pixProAttrs.fitstImage = file;
+        togglePixProVisible()
+        target.value = '';
+      } else {
+        alert('请选择图片文件');
+      }
+    }
+  })
+</script>
 ```
 
 ### API 参考

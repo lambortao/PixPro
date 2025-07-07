@@ -6,12 +6,11 @@
       type="range"
       :min="min"
       :max="max"
-      v-model="localSize"
+      v-model="eraserSize"
       @mouseenter="isHovering = true"
       @mouseleave="isHovering = false"
-      class="input"
       :style="{
-        background: `linear-gradient(to right, #4878ef 0%, #4878ef ${((localSize - min) / (max - min)) * 100}%, #e0e0e0 ${((localSize - min) / (max - min)) * 100}%, #e0e0e0 100%)`,
+        background: `linear-gradient(to right, #4878ef 0%, #4878ef ${((eraserSize - min) / (max - min)) * 100}%, #e0e0e0 ${((eraserSize - min) / (max - min)) * 100}%, #e0e0e0 100%)`,
       }"
     />
     <div
@@ -19,8 +18,8 @@
       ref="cursorCircle"
       :style="{
         position: 'fixed',
-        width: `${localSize}px`,
-        height: `${localSize}px`,
+        width: `${eraserSize}px`,
+        height: `${eraserSize}px`,
         borderRadius: '50%',
         backgroundColor: '#4878ef',
         opacity: 0.3,
@@ -34,11 +33,12 @@
 
 <script>
 export default {
+  name: "EraserSizeSlider",
   props: {
-    size: {
+    value: {
       type: Number,
-      default: 50,
       required: true,
+      default: 50,
     },
     min: {
       type: Number,
@@ -51,44 +51,45 @@ export default {
   },
   data() {
     return {
-      localSize: this.size,
+      eraserSize: this.value,
       isHovering: false,
+      cursorCircle: null,
+      inputRef: null,
     };
   },
   watch: {
-    localSize(newVal) {
+    value(newVal) {
+      this.eraserSize = newVal;
+    },
+    eraserSize(newVal) {
       this.$emit("input", newVal);
       this.updateCirclePosition();
     },
-    size(newVal) {
-      this.localSize = newVal;
-    },
   },
   mounted() {
+    this.cursorCircle = this.$refs.cursorCircle;
+    this.inputRef = this.$refs.inputRef;
     window.addEventListener("resize", this.updateCirclePosition);
     setTimeout(this.updateCirclePosition, 0);
-    console.log(((this.localSize - this.min) / (this.max - this.min)) * 100, "((localSize - min) / (max - min)) * 100");
-    console.log(this.localSize, "localSize");
   },
   beforeDestroy() {
     window.removeEventListener("resize", this.updateCirclePosition);
   },
   methods: {
     updateCirclePosition() {
-      if (!this.$refs.inputRef || !this.$refs.cursorCircle) return;
+      if (!this.inputRef || !this.cursorCircle) return;
 
-      const input = this.$refs.inputRef;
+      const input = this.inputRef;
       const rect = input.getBoundingClientRect();
       const thumbWidth = 16; // 滑块按钮的宽度
       const range = this.max - this.min; // 滑块的范围
-      const percentage = (this.localSize - this.min) / range; // 当前值在范围内的百分比
+      const percentage = (this.eraserSize - this.min) / range; // 当前值在范围内的百分比
 
       // 计算滑块按钮的位置
       const thumbPosition = rect.left + (rect.width - thumbWidth) * percentage + thumbWidth / 2;
-      console.log(thumbPosition, "thumbPosition");
 
-      this.$refs.cursorCircle.style.left = `${thumbPosition}px`;
-      this.$refs.cursorCircle.style.top = `${rect.top + rect.height / 2}px`;
+      this.cursorCircle.style.left = `${thumbPosition}px`;
+      this.cursorCircle.style.top = `${rect.top + rect.height / 2}px`;
     },
   },
 };

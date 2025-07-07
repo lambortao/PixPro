@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import SvgIcon from "./SvgIcon";
 import "./AngleAdjustment.less";
 
@@ -10,11 +10,15 @@ interface AngleAdjustmentProps {
   onHandleRemindImage?: (visible: boolean) => void;
 }
 
-const AngleAdjustment: React.FC<AngleAdjustmentProps> = ({ value, onChange, maxAngle, snapThreshold = 5, onHandleRemindImage }) => {
+const AngleAdjustment: React.FC<AngleAdjustmentProps> = ({ value, onChange, maxAngle, snapThreshold = 1, onHandleRemindImage }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [startY, setStartY] = useState(0);
   const [startAngle, setStartAngle] = useState(0);
   const [isSnapping, setIsSnapping] = useState(false);
+  const [speedFactor, setSpeedFactor] = useState(2);
+  const containerRef = useRef<HTMLDivElement>(null);
+  /** 需要吸附的角度数组，默认只有0度 */
+  const snapAngles = [-90, -60, -45, -30, -15, 0, 15, 30, 45, 60, 90];
 
   const rulerStyle = {
     height: `${(maxAngle / 3) * 9}px`,
@@ -22,34 +26,41 @@ const AngleAdjustment: React.FC<AngleAdjustmentProps> = ({ value, onChange, maxA
     transition: isSnapping ? "transform 200ms ease-out" : "none",
   };
 
-  const checkSnap = (angle: number, shouldSnap: boolean = false, dragDistance: number = 0): number => {
-    if (shouldSnap && dragDistance > 3 && Math.abs(angle) <= 3) {
-      setIsSnapping(true);
-      setTimeout(() => {
-        setIsSnapping(false);
-      }, 200);
-      return 0;
+  const checkSnap = (angle: number): number => {
+    for (const snapAngle of snapAngles) {
+      if (Math.abs(angle - snapAngle) <= snapThreshold) {
+        setIsSnapping(true);
+        setTimeout(() => {
+          setIsSnapping(false);
+        }, 200);
+        return snapAngle;
+      }
     }
+
     setIsSnapping(false);
     return angle;
   };
 
-  const handleWheel = (e: React.WheelEvent) => {
+  const handleWheel = (e: any) => {
     e.preventDefault();
 
-    const step = Math.abs(value) <= 1 ? 6 : 3;
+    let step = Math.abs(value) <= snapThreshold ? 6 : 3;
+    step = step / speedFactor;
     const direction = e.deltaY > 0 ? -1 : 1;
     let newValue = Math.max(-maxAngle / 2, Math.min(maxAngle / 2, value + direction * step));
-
-    if (Math.abs(newValue) <= 1) {
-      newValue = 0;
-      setIsSnapping(true);
-      setTimeout(() => setIsSnapping(false), 200);
+    const snappedAngle = checkSnap(newValue);
+    if (snappedAngle !== newValue) {
+      onChange(snappedAngle);
+    } else {
+      onChange(newValue);
     }
-
-    onHandleRemindImage?.(true);
-    onChange(newValue);
   };
+  useEffect(() => {
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener("wheel", handleWheel, { passive: false });
+    }
+  }, [value, maxAngle, snapThreshold, speedFactor, onChange, onHandleRemindImage]);
 
   const startDrag = (e: React.MouseEvent) => {
     setIsDragging(true);
@@ -64,9 +75,8 @@ const AngleAdjustment: React.FC<AngleAdjustmentProps> = ({ value, onChange, maxA
 
     const newAngle = startAngle - Math.round(deltaY / 3);
     const boundedAngle = Math.max(-maxAngle / 2, Math.min(maxAngle / 2, newAngle));
-    const dragDistance = Math.abs(boundedAngle - startAngle);
 
-    const snappedAngle = checkSnap(boundedAngle, true, dragDistance);
+    const snappedAngle = checkSnap(boundedAngle);
     onChange(snappedAngle);
   };
 
@@ -78,7 +88,7 @@ const AngleAdjustment: React.FC<AngleAdjustmentProps> = ({ value, onChange, maxA
   };
 
   return (
-    <div className="rotate-ruler" onWheel={handleWheel} onMouseDown={startDrag} onMouseMove={handleDrag} onMouseUp={stopDrag} onMouseLeave={stopDrag}>
+    <div className="rotate-ruler" ref={containerRef} onMouseDown={startDrag} onMouseMove={handleDrag} onMouseUp={stopDrag} onMouseLeave={stopDrag}>
       <div className="slide-container" style={rulerStyle}>
         <div className="ruler-content">
           <div className="ruler-scale">

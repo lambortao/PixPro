@@ -6,7 +6,7 @@ class ColoredBtn extends HTMLElement {
   constructor() {
     super();
     this._text = "";
-    this._icon = "";
+    this._icon = "./src/img/icon/expand-btn.svg";
     this._disabled = false;
     this._loading = false;
   }
@@ -15,9 +15,9 @@ class ColoredBtn extends HTMLElement {
     return ["text", "icon", "disabled", "loading"];
   }
 
-  connectedCallback() {
-    this.render();
-  }
+  // connectedCallback() {
+  //   this.render();
+  // }
 
   attributeChangedCallback(name, oldValue, newValue) {
     if (oldValue !== newValue) {
@@ -64,9 +64,9 @@ class ColoredBtn extends HTMLElement {
   set disabled(value) {
     this._disabled = value;
     if (value) {
-      this.setAttribute("disabled", "");
+      this.setAttribute("colored-btn-disabled", "");
     } else {
-      this.removeAttribute("disabled");
+      this.removeAttribute("colored-btn-disabled");
     }
   }
 
@@ -84,6 +84,8 @@ class ColoredBtn extends HTMLElement {
   }
 
   render() {
+    console.log("render");
+
     // 清空当前内容
     this.innerHTML = "";
 
@@ -99,33 +101,52 @@ class ColoredBtn extends HTMLElement {
       button.classList.add("loading");
     }
 
-    // 添加图标（如果有）
-    if (this._icon) {
-      const svgIcon = document.createElement("svg-icon");
-      svgIcon.setAttribute("name", this._icon);
-      button.appendChild(svgIcon);
-    }
+    // 创建Promise链来处理图标加载和后续操作
+    const renderButton = async () => {
+      if (this._icon) {
+        try {
+          const response = await fetch(this._icon);
+          const svgContent = await response.text();
+          const svgContainer = document.createElement("div");
+          svgContainer.innerHTML = svgContent;
 
-    // 添加文本
-    const span = document.createElement("span");
-    span.textContent = this._text;
-    button.appendChild(span);
+          const svgElement = svgContainer.querySelector("svg");
+          svgElement.style.color = "white";
 
-    // 添加点击事件
-    button.addEventListener("click", (e) => {
-      if (!this._disabled && !this._loading) {
-        // 触发自定义事件
-        this.dispatchEvent(
-          new CustomEvent("click", {
-            bubbles: true,
-            cancelable: true,
-            detail: {},
-          })
-        );
+          const paths = svgElement.querySelectorAll("path, polygon, rect, circle, line, polyline, text");
+          paths.forEach((path) => {
+            path.style.fill = "white";
+          });
+
+          button.appendChild(svgElement);
+        } catch (error) {
+          return console.error("Error loading SVG:", error);
+        }
       }
-    });
+      return Promise.resolve();
+    };
 
-    this.appendChild(button);
+    renderButton().then(() => {
+      // 添加文本
+      const span = document.createElement("span");
+      span.textContent = this._text;
+      button.appendChild(span);
+
+      // 添加点击事件
+      button.addEventListener("click", (e) => {
+        if (!this._disabled && !this._loading) {
+          this.dispatchEvent(
+            new CustomEvent("click", {
+              bubbles: true,
+              cancelable: true,
+              detail: {},
+            })
+          );
+        }
+      });
+
+      this.appendChild(button);
+    });
   }
 }
 

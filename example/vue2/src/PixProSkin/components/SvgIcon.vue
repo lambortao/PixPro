@@ -63,7 +63,6 @@ export default {
   },
 };
 </script>
-
 <style lang="less" scoped>
 .svg-icon {
   display: flex;

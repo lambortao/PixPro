@@ -1,0 +1,38 @@
+{
+  "name": "photo-studio",
+  "version": "0.1.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "@rollup/plugin-alias": "^5.1.0",
+    "@rollup/plugin-commonjs": "^25.0.0",
+    "@rollup/plugin-node-resolve": "^15.0.0",
+    "@rollup/plugin-terser": "^0.4.0",
+    "@rollup/plugin-typescript": "^11.0.0",
+    "@types/node": "^22.10.2",
+    "@vitejs/plugin-vue2": "^2.3.0",
+    "less": "^4.2.2",
+    "pkg-types": "^1.0.3",
+    "postcss-preset-env": "^10.1.5",
+    "rollup": "^4.0.0",
+    "rollup-plugin-postcss": "^4.0.2",
+    "typescript": "^5.7.2",
+    "vite": "^6.0.4",
+    "vite-plugin-dts": "^4.4.0"
+  },
+  "scripts": {
+    "build": "rollup -c",
+    "vue": "vite example/vue2 --config example/vue2/vite.config.js",
+    "react": "vite example/react --config example/react/vite.config.ts",
+    "js": "vite example/js --config example/js/vite.config.js",
+    "build:vue2": "vite build example/vue2 --config example/vue2/vite.config.js"
+  },
+  "dependencies": {
+    "@pixpro/core": "^0.1.8",
+    "@pixpro/vue": "^0.1.12",
+    "compressorjs": "^1.2.1",
+    "lodash-es": "^4.17.21",
+    "uuid": "^11.0.5",
+    "vue": "^2.6.14"
+  }
+}

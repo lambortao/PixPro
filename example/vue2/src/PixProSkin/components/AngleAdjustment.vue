@@ -4,7 +4,7 @@
       <div class="ruler-content">
         <!-- 数字和刻度 -->
         <div class="ruler-scale">
-          <div v-for="n in maxAngle / 3 + 1" :key="n" class="scale-row">
+          <div v-for="n in Math.floor(maxAngle / 3) + 1" :key="n" class="scale-row">
             <!-- 数字每15度(5个刻度)一个 -->
             <div class="number-cell">
               <span v-if="(n - 1) % 5 === 0">{{ (n - 1) * 3 - maxAngle / 2 }}°</span>
@@ -17,14 +17,18 @@
         </div>
       </div>
     </div>
-    <div class="ruler-pointer"><svg-icon name="pointer" /></div>
+    <div class="ruler-pointer">
+      <svg-icon name="pointer" />
+    </div>
   </div>
 </template>
 
 <script>
 import SvgIcon from "./SvgIcon.vue";
+import { debounce } from "lodash-es";
 
 export default {
+  name: "AngleAdjustment",
   components: {
     SvgIcon,
   },
@@ -35,11 +39,15 @@ export default {
     },
     maxAngle: {
       type: Number,
-      required: true,
+      default: 180,
     },
     snapThreshold: {
       type: Number,
-      default: 5,
+      default: 1,
+    },
+    snapAngles: {
+      type: Array,
+      default: () => [-90, -60, -45, -30, -15, 0, 15, 30, 45, 60, 90],
     },
   },
   data() {
@@ -47,7 +55,11 @@ export default {
       isDragging: false,
       startY: 0,
       startAngle: 0,
+      speedFactor: 3,
       isSnapping: false,
+      isScrolling: false,
+      remindImage: null,
+      containerCanvas: null,
     };
   },
   computed: {
@@ -65,31 +77,74 @@ export default {
       };
     },
   },
+  mounted() {
+    this.remindImage = document.querySelector("#remind-image");
+    this.containerCanvas = document.querySelector("#container-canvas");
+  },
   methods: {
+    addTransition() {
+      if (this.remindImage) {
+        this.remindImage.style.transition = "transform 80ms ease";
+      }
+      if (this.containerCanvas) {
+        this.containerCanvas.style.transition = "transform 80ms ease";
+      }
+    },
+    removeTransition() {
+      if (this.remindImage) {
+        this.remindImage.style.transition = "";
+      }
+      if (this.containerCanvas) {
+        this.containerCanvas.style.transition = "";
+      }
+    },
+    hideRemindImage: debounce(function () {
+      this.isScrolling = false;
+      this.$emit("handle-remind-image", false);
+      this.removeTransition();
+    }, 500),
     checkSnap(angle) {
-      if (Math.abs(angle) <= this.snapThreshold) {
-        this.isSnapping = true;
-        setTimeout(() => {
-          this.isSnapping = false;
-        }, 200);
-        return 0;
+      // 遍历所有需要吸附的角度
+      for (const snapAngle of this.snapAngles) {
+        // 检查当前角度是否在吸附阈值范围内
+        if (Math.abs(angle - snapAngle) <= this.snapThreshold) {
+          this.isSnapping = true;
+          setTimeout(() => {
+            this.isSnapping = false;
+          }, 200);
+          return snapAngle;
+        }
       }
       this.isSnapping = false;
       return angle;
     },
     handleWheel(e) {
       e.preventDefault();
-
-      // 根据当前角度是否在吸附范围内动态调整粒度
-      const step = Math.abs(this.value) <= this.snapThreshold ? 6 : 3;
-      const direction = e.deltaY > 0 ? 1 : -1; // 反向滚动方向
-      const newValue = Math.max(-this.maxAngle / 2, Math.min(this.maxAngle / 2, this.value + direction * step));
-
       // 如果正在吸附动画中，不处理滚轮事件
       if (this.isSnapping) return;
 
+      // 如果之前没有在滚动，则显示提醒图片并添加过渡效果
+      if (!this.isScrolling) {
+        this.isScrolling = true;
+        this.$emit("handle-remind-image", true);
+        this.addTransition();
+      }
+
+      // 重置防抖计时器
+      this.hideRemindImage();
+
+      // 根据当前角度是否在吸附范围内动态调整粒度
+      let step = Math.abs(this.value) <= this.snapThreshold ? 6 : 3;
+      // 应用速度因子，speedFactor越大，每次移动的角度越小
+      step = step / this.speedFactor;
+      const direction = e.deltaY > 0 ? 1 : -1; // 反向滚动方向
+      const newValue = Math.max(-this.maxAngle / 2, Math.min(this.maxAngle / 2, this.value + direction * step));
+
       // 检查是否需要吸附
       const snappedValue = this.checkSnap(newValue);
+      console.log(snappedValue);
+      console.log(newValue, "newValue");
+
       if (snappedValue !== newValue) {
         this.$emit("input", snappedValue);
       } else {
@@ -100,12 +155,17 @@ export default {
       this.isDragging = true;
       this.startY = e.clientY;
       this.startAngle = this.value;
+      this.$emit("handle-remind-image", true);
+      this.addTransition();
     },
     handleDrag(e) {
       if (!this.isDragging) return;
       const deltaY = this.startY - e.clientY; // 反向拖拽方向
-      const newAngle = this.startAngle + Math.round(deltaY / 3);
-      this.$emit("input", this.checkSnap(Math.max(-this.maxAngle / 2, Math.min(this.maxAngle / 2, newAngle))));
+      // 应用速度因子，speedFactor越大，拖拽灵敏度越低
+      const speedFactor = 3;
+      const newAngle = this.startAngle + Math.round(deltaY / (3 * speedFactor));
+      const clampedAngle = Math.max(-this.maxAngle / 2, Math.min(this.maxAngle / 2, newAngle));
+      this.$emit("input", this.checkSnap(clampedAngle));
     },
     stopDrag() {
       if (this.isDragging) {
@@ -113,6 +173,8 @@ export default {
         if (snappedValue !== this.value) {
           this.$emit("input", snappedValue);
         }
+        this.$emit("handle-remind-image", false);
+        this.removeTransition();
       }
       this.isDragging = false;
     },

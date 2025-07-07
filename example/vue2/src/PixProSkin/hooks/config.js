@@ -8,7 +8,7 @@ export const controlTextData = {
   expand: {
     btn: '扩图',
     title: '扩图',
-    desc: '向外扩展图片，AI将填充图片以外的部分。',
+    desc: '向外扩展图片，AI将填充图片以外的部分',
     icon: 'expand-btn'
   },
   erase: {
@@ -20,13 +20,13 @@ export const controlTextData = {
   'remove-bg': {
     btn: '移除背景',
     title: '移除背景',
-    desc: '一键抠出图片中的主体。',
+    desc: '一键抠出图片中的主体',
     icon: 'remove-bg-btn'
   },
   hd: {
     btn: '提升解析度',
     title: '提升解析度',
-    desc: '最大可提升至 3200 x 3200',
+    desc: '立即提提升图片解析度',
     icon: 'hd-btn'
   }
 }
@@ -48,17 +48,43 @@ export const colorListData = [
   '#afc5c1',
   '#a2e1c9',
   '#4067c5',
-  '#0b209f',
-  '#4041c3',
-  '#27297e',
-  '#5a335f',
-  '#d74f3c',
-  '#ebaacb',
-  '#fbe8e3',
-  '#f3e48b',
-  '#ccef7a',
-  '#75c097',
-  '#62b6b0',
-  '#6de9b0',
-  '#83c8df'
+  '#2b4b8c',
+  '#1a2b4c',
+  '#000000'
 ]
+
+
+/** 橡皮擦默认大小 */
+export const DEFAULT_ERASER_SIZE = 50;
+
+/** 上传图片的压缩阈值 */
+export const MAX_UPLOAD_IMAGE_SIZE = 1
+export const MAX_UPLOAD_IMAGE_WIDTH = 3000;
+
+/** 擦除最小宽高 */
+export const MIN_ERASE_IMAGE_WIDTH = 500;
+export const MIN_ERASE_IMAGE_HEIGHT = 500;
+/** 擦除最大宽高 */
+export const MAX_ERASE_IMAGE_WIDTH = 5000;
+export const MAX_ERASE_IMAGE_HEIGHT = 5000;
+
+/** 移除背景的最低宽高 */
+export const MIN_REMOVE_BG_WIDTH = 256;
+export const MIN_REMOVE_BG_HEIGHT = 256;
+/** 移除背景的最大宽高 */
+export const MAX_REMOVE_BG_WIDTH = 5000;
+export const MAX_REMOVE_BG_HEIGHT = 5000;
+
+/** 解析度提升最小分辨率 */
+export const MIN_HD_IMAGE_WIDTH = 256;
+export const MIN_HD_IMAGE_HEIGHT = 256;
+/** 解析度提升最大分辨率 */
+export const MAX_HD_IMAGE_WIDTH = 3000;
+export const MAX_HD_IMAGE_HEIGHT = 3000;
+
+/** 扩图最小支持的分辨率 */
+export const MIN_EXPAND_IMAGE_WIDTH = 256;
+export const MIN_EXPAND_IMAGE_HEIGHT = 256;
+/** 扩图的最大宽高 */
+export const MAX_EXPAND_IMAGE_HEIGHT = 5000;
+export const MAX_EXPAND_IMAGE_WIDTH = 5000;

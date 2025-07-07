@@ -12,6 +12,9 @@ class AngleAdjustment extends HTMLElement {
     this._startAngle = 0;
     this._snapThreshold = 1;
     this._isSnapping = false;
+    /** 速度因子，值越大移动越慢 */
+    this._speedFactor = 2;
+    this._snapAngles = [-90, -60, -45, -30, -15, 0, 15, 30, 45, 60, 90];
   }
 
   static get observedAttributes() {
@@ -115,7 +118,7 @@ class AngleAdjustment extends HTMLElement {
     rulerPointer.className = "ruler-pointer";
 
     const svgIcon = document.createElement("img");
-    svgIcon.src = "/src/img/icon/pointer.svg";
+    svgIcon.src = "./src/img/icon/pointer.svg";
     rulerPointer.appendChild(svgIcon);
 
     // 组装组件
@@ -156,36 +159,53 @@ class AngleAdjustment extends HTMLElement {
   }
 
   _checkSnap(angle) {
-    if (Math.abs(angle) <= this._snapThreshold) {
-      this._isSnapping = true;
-      this._slideContainer.style.transition = "transform 100ms ease-out";
-      setTimeout(() => {
-        this._isSnapping = false;
-        this._slideContainer.style.transition = "none";
-      }, 50);
-      return 0;
+    // 遍历所有需要吸附的角度
+    for (const snapAngle of this._snapAngles) {
+      // 检查当前角度是否在吸附阈值范围内
+      if (Math.abs(angle - snapAngle) <= this._snapThreshold) {
+        this._isSnapping = true;
+        this._slideContainer.style.transition = "transform 200ms ease-out";
+        console.log(snapAngle, "snapAngle");
+
+        setTimeout(() => {
+          this._isSnapping = false;
+          this._slideContainer.style.transition = "none";
+        }, 200);
+        return snapAngle;
+      }
     }
+
     this._isSnapping = false;
     this._slideContainer.style.transition = "none";
     return angle;
   }
 
+  // 处理滚轮事件
   _handleWheel(e) {
     e.preventDefault();
-    const step = Math.abs(this._angle) <= this._snapThreshold ? 6 : 3;
-    const direction = e.deltaY > 0 ? -1 : 1;
-    const newValue = Math.max(-this._maxAngle / 2, Math.min(this._maxAngle / 2, this._angle + direction * step));
 
+    // 如果正在吸附动画中，不处理滚轮事件
     if (this._isSnapping) return;
 
     // 触发提醒图片显示事件
     this.dispatchEvent(new CustomEvent("handle-remind-image", { detail: { visible: true } }));
 
+    let step = Math.abs(this._angle) <= this._snapThreshold ? 6 : 3;
+    // 应用速度因子，speedFactor越大，每次移动的角度越小
+    step = step / this._speedFactor;
+    const direction = e.deltaY > 0 ? -1 : 1; // 反向滚动方向
+    const newValue = Math.max(-this._maxAngle / 2, Math.min(this._maxAngle / 2, this._angle + direction * step));
+
     const snappedValue = this._checkSnap(newValue);
-    this.angle = snappedValue;
+    if (snappedValue !== newValue) {
+      this.angle = snappedValue;
+    } else {
+      this.angle = newValue;
+    }
+
     this._emitChangeEvent();
   }
-
+  // 开始拖动
   _startDrag(e) {
     this._isDragging = true;
     this._startY = e.clientY;
@@ -193,15 +213,13 @@ class AngleAdjustment extends HTMLElement {
     // 触发提醒图片显示事件
     this.dispatchEvent(new CustomEvent("handle-remind-image", { detail: { visible: true } }));
   }
-
+  // 处理拖动
   _handleDrag(e) {
     if (!this._isDragging) return;
     const deltaY = e.clientY - this._startY;
-    const newAngle = this._startAngle + Math.round(deltaY / 3);
+    const newAngle = this._startAngle + Math.round(deltaY / (3 * this._speedFactor));
+    // 应用速度因子，speedFactor越大，拖拽灵敏度越低
     const boundedAngle = Math.max(-this._maxAngle / 2, Math.min(this._maxAngle / 2, newAngle));
-
-    if (this._isSnapping) return;
-
     const snappedValue = this._checkSnap(boundedAngle);
     this.angle = snappedValue;
     this._emitChangeEvent();

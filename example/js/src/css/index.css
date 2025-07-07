@@ -12,6 +12,8 @@ html {
   background-color: rgba(0, 0, 0, 0.5);
   padding: 46px;
   box-sizing: border-box;
+  z-index: 99;
+  font-family: "Microsoft Yahei", "PingFang SC", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
 }
 
 .editor-main header {
@@ -190,8 +192,8 @@ html {
   cursor: pointer;
   border-radius: 8px;
   margin: 5px 0;
-  transition: all 0.3s ease;
   position: relative;
+  transition: all 0.3s ease;
 }
 
 /* .pix-pro-container .controls-container .icon-btn:hover:not(.disabled) {
@@ -281,6 +283,10 @@ html {
   cursor: not-allowed !important;
   pointer-events: auto !important;
 }
+.coloredBtn-disabled .colored-btn {
+  background: #ccc !important;
+  cursor: not-allowed !important;
+}
 
 .pix-pro-container .disabled > *,
 .pix-pro-container [disabled] > *,
@@ -352,6 +358,9 @@ html {
   border: none;
   background: none;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.3s ease;
 }
 
@@ -536,8 +545,6 @@ html {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -545,6 +552,27 @@ html {
   z-index: 9;
   font-size: 24px;
   transition: all 0.3s ease;
+}
+.pix-pro-container .image-container .image-content .image-box .image-loading .loader-container {
+  position: relative;
+  overflow: hidden;
+  background-color: transparent;
+}
+.pix-pro-container .image-container .image-content .image-box .image-loading .loader-container .animated-image {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  animation: complexAnimation 12s infinite linear;
+  transform-origin: center center;
+  min-width: 2000px;
+  min-height: 2000px;
+  will-change: transform; /* 优化动画性能 */
+}
+.pix-pro-container .image-container .image-content .image-box .image-loading .loader-container .center-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .pix-pro-container .image-container .image-content .image-box .image-loading.hide {
@@ -875,7 +903,7 @@ span.line {
 
 .flip-btn {
   flex: 1;
-  padding: 8px;
+  /* padding: 8px; */
   border-radius: 8px;
   /* border: 1px solid #e8e8e8; */
   background-color: transparent;
@@ -914,16 +942,25 @@ span.line {
   height: 15px;
   object-fit: contain;
 }
-
 .pix-pro-container .crop .flip-btn button img {
-  width: 16px;
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+.pix-pro-container .crop .flip-btn button:nth-child(3) img {
+  width: 17px;
+  height: 14px;
+  object-fit: contain;
+}
+.pix-pro-container .crop .flip-btn button:nth-child(4) img {
+  width: 14px;
   height: 16px;
   object-fit: contain;
 }
 
 .pix-pro-container .icon-btn img {
-  width: 20px;
-  height: 20px;
+  width: 18.7px;
+  height: 15.4px;
   object-fit: contain;
 }
 

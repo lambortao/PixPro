@@ -1,0 +1,24 @@
+.loader-container {
+  position: relative;
+  overflow: hidden;
+  background-color: transparent;
+  position: relative;
+}
+
+.animated-image {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  animation: complexAnimation 12s infinite linear;
+  transform-origin: center center;
+  min-width: 2000px;
+  min-height: 2000px;
+  will-change: transform; /* 优化动画性能 */
+}
+
+.center-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}

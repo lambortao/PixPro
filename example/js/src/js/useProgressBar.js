@@ -56,7 +56,6 @@ function useProgressBar(loading) {
       if (progressFill) {
         progressFill.style.transform = `scaleX(${progress / 100})`;
       }
-      console.log(progress, "-----------------progress-----------");
 
       // 计算下一次更新的延迟
       let delay = fastFinish ? 10 : 30;

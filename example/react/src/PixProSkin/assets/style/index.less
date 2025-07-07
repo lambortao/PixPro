@@ -9,10 +9,19 @@
   background-color: rgba(0, 0, 0, 0.5);
   padding: 46px;
   box-sizing: border-box;
+  z-index: 99;
+  font-family: "Microsoft Yahei", "PingFang SC", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
 
   header {
     height: 56px;
   }
+}
+
+.error-text {
+  color: #f35353;
+  font-size: 13px;
+  margin-top: 5px;
+  text-align: center;
 }
 
 .pix-pro-container {
@@ -81,6 +90,8 @@
 
         i {
           margin-right: 5px;
+          width: 15px;
+          height: 15px;
         }
 
         span {
@@ -99,7 +110,6 @@
         pointer-events: none;
       }
     }
-
     figure.logo {
       margin: 0;
       padding: 0;
@@ -131,7 +141,7 @@
       }
       small {
         color: #9198a9;
-        margin-top: 10px;
+        margin: 10px 0 0 0 !important;
         display: block;
       }
     }
@@ -199,6 +209,91 @@
     }
   }
 
+  .remove-bg {
+    .color-list {
+      small {
+        display: block;
+        margin-bottom: 20px;
+      }
+    }
+    .color-box {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, 50px);
+      gap: 5px;
+
+      .color-item {
+        width: 50px;
+        height: 50px;
+        border-radius: 6px;
+        cursor: pointer;
+        border: 2px solid transparent;
+        padding: 3px;
+        box-sizing: border-box;
+        position: relative;
+
+        span {
+          display: block;
+          box-sizing: border-box;
+          border: 1px solid #cdd5dd;
+          width: 100%;
+          height: 100%;
+          border-radius: 6px;
+        }
+
+        i.close-icon {
+          position: absolute;
+          top: -10px;
+          right: -10px;
+          width: 20px;
+          height: 20px;
+          transform: scale(0.9);
+          cursor: pointer;
+          background-color: #fff;
+          border-radius: 50%;
+          border: 1px solid #cdd5dd;
+          opacity: 0;
+          .ani300();
+        }
+
+        &:hover {
+          i.close-icon {
+            opacity: 1;
+          }
+        }
+
+        &.add-btn {
+          span {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(to bottom, #f9f9f9, #ffffff);
+          }
+        }
+
+        &.transparent {
+          overflow: hidden;
+          span {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            &::before {
+              content: "";
+              width: 60px;
+              height: 1px;
+              background-color: red;
+              transform: scale(1.3) rotate(-45deg);
+            }
+          }
+        }
+
+        &.active {
+          border-color: @primary-color;
+        }
+      }
+    }
+  }
+
   .image-container {
     flex: 1;
     min-width: 400px;
@@ -213,12 +308,17 @@
 
     .image-toolbar {
       height: 56px;
-      padding: 0 16px;
+      padding: 0 16px 0 30px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       background-color: #efefef;
       border-bottom: 1px solid #e8e8e8;
+
+      .toolbar-status {
+        color: #184aff;
+        font-size: 14px;
+      }
 
       .toolbar-box {
         height: 100%;
@@ -239,6 +339,7 @@
       justify-content: center;
       background-color: #f9f9f9;
       box-sizing: border-box;
+      position: relative;
 
       .image-box {
         flex: 1;
@@ -250,8 +351,6 @@
           position: absolute;
           top: 0;
           left: 0;
-          width: 100%;
-          height: 100%;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -265,11 +364,62 @@
             pointer-events: none;
           }
         }
+
+        .main-loading {
+          position: absolute;
+          width: auto;
+          height: auto;
+          padding: 12px 18px;
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: center;
+          bottom: 60px;
+          left: 50%;
+          transform: translateX(-50%);
+          z-index: 15;
+          background-color: rgba(30, 30, 30, 0.85);
+          border-radius: 6px;
+          box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+          backdrop-filter: blur(3px);
+          transition: opacity 0.3s ease;
+
+          .progress-bar {
+            position: relative;
+            width: 180px;
+            height: 4px;
+            background-color: rgba(255, 255, 255, 0.15);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-right: 12px;
+
+            .progress-fill {
+              height: 100%;
+              width: 100%;
+              background-color: #ffffff;
+              border-radius: 2px;
+              transform-origin: left center;
+              transform: scaleX(0);
+              transition: transform 0.3s cubic-bezier(0.33, 1, 0.68, 1);
+              position: relative;
+            }
+          }
+
+          .progress-percentage {
+            color: #ffffff;
+            font-size: 13px;
+            min-width: 36px;
+            text-align: right;
+            font-weight: 500;
+            font-family: "Arial", sans-serif;
+          }
+        }
       }
       .image-rotate-box {
         box-sizing: border-box;
         padding: 10px;
         width: 100px;
+        height: 100%;
       }
     }
   }
@@ -309,6 +459,7 @@
 
   .icon-btn {
     padding: 8px;
+    box-sizing: border-box;
     width: 100%;
     display: flex;
     align-items: center;
@@ -326,6 +477,18 @@
     i {
       width: 30px;
       height: 20px;
+      transform: scale(1.1);
+    }
+    figure {
+      width: 30px;
+      height: 20px;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      i {
+        border-color: #2a3246 !important;
+      }
     }
 
     span {
@@ -334,9 +497,9 @@
       font-size: 14px;
     }
 
-    &.active {
-      background-color: transparent;
-    }
+    // &.active {
+    //   background-color: #f5f5f5;
+    // }
 
     &.disabled {
       opacity: 0.5;
@@ -361,208 +524,25 @@
 .fade-leave-to {
   opacity: 0;
 }
-.main-loading {
-  position: absolute;
-  width: auto;
-  height: auto;
-  padding: 12px 18px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  bottom: 60px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 15;
-  background-color: rgba(30, 30, 30, 0.85);
-  border-radius: 6px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(3px);
-  transition: opacity 0.3s ease;
-
-  .progress-bar {
-    position: relative;
-    width: 180px;
-    height: 4px;
-    background-color: rgba(255, 255, 255, 0.15);
-    border-radius: 2px;
-    overflow: hidden;
-    margin-right: 12px;
-
-    .progress-fill {
-      height: 100%;
-      width: 100%;
-      background-color: #ffffff;
-      border-radius: 2px;
-      transform-origin: left center;
-      transform: scaleX(0);
-      transition: transform 0.3s cubic-bezier(0.33, 1, 0.68, 1);
-      position: relative;
-    }
-  }
-
-  .progress-percentage {
-    color: #ffffff;
-    font-size: 13px;
-    min-width: 36px;
-    text-align: right;
-    font-weight: 500;
-    font-family: "Arial", sans-serif;
-  }
+span.line {
+  display: block;
+  width: 100%;
+  height: 1px;
+  background-color: #e8e8e8;
+  margin: 20px 0;
 }
 
-// 颜色列表样式
-.color-list {
-  margin-top: 10px;
-
-  small {
-    display: block;
-    margin-bottom: 10px;
-  }
-
-  .color-box {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, 50px);
-    gap: 5px;
-
-    .color-item {
-      border: 2px solid transparent;
-      border-radius: 6px;
-      box-sizing: border-box;
-      cursor: pointer;
-      height: 50px;
-      // overflow: hidden;
-      padding: 3px;
-      width: 50px;
-      position: relative;
-      &.active {
-        border-color: #184aff;
-      }
-
-      &.transparent {
-        overflow: hidden;
-        span {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          overflow: hidden;
-          &::before {
-            content: "";
-            width: 60px;
-            height: 1px;
-            background-color: red;
-            transform: scale(1.3) rotate(-45deg);
-          }
-        }
-      }
-
-      span {
-        border: 1px solid #cdd5dd;
-        border-radius: 6px;
-        box-sizing: border-box;
-        display: block;
-        height: 100%;
-        overflow: hidden;
-        width: 100%;
-      }
-      i.close-icon {
-        position: absolute;
-        top: -10px;
-        right: -10px;
-        width: 20px;
-        height: 20px;
-        transform: scale(0.9);
-        cursor: pointer;
-        background-color: #fff;
-        border-radius: 50%;
-        border: 1px solid #cdd5dd;
-        opacity: 0;
-        .ani300();
-      }
-
-      &:hover {
-        i.close-icon {
-          opacity: 1;
-        }
-      }
-
-      &.add-btn {
-        span {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: linear-gradient(to bottom, #f9f9f9, #ffffff);
-        }
-      }
-    }
-  }
-}
-
-// 进度条样式
-.progress-bar {
-  width: 80%;
-  height: 4px;
-  background-color: rgba(255, 255, 255, 0.2);
-  border-radius: 2px;
-  overflow: hidden;
-  margin: 0 auto;
-
-  .progress-fill {
-    height: 100%;
-    background-color: var(--primary-color);
-    transform-origin: left;
-    transition: transform 0.1s ease;
-  }
-}
-
-.progress-percentage {
-  font-size: 12px;
-  color: #fff;
-  text-align: center;
-  // margin-top: 8px;
-}
-
-// 全屏遮罩
 .full-screen-blocker {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: transparent;
-  z-index: 999;
-}
-
-// 线条分隔符
-.line {
-  display: block;
   width: 100%;
-  height: 1px;
-  background-color: #e8e8e8;
-  margin: 15px 0;
-}
-
-// 图标比例样式
-.icon-btn {
-  figure {
-    width: 30px;
-    height: 20px;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    i {
-      border-color: #2a3246 !important;
-      transform: scale(1.1);
-    }
-  }
-}
-
-// 工具栏状态区域
-.toolbar-status {
-  padding: 0 15px;
-  font-size: 14px;
-  color: #184aff;
-  // #184aff
+  height: 100%;
+  z-index: 21; // 确保高于其他所有元素
+  background-color: transparent; // 完全透明
+  cursor: wait; // 显示等待光标
+  user-select: none; // 防止文本选择
+  pointer-events: all; // 捕获所有点击事件
 }

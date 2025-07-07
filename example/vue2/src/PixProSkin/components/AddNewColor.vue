@@ -1,6 +1,6 @@
 <template>
   <div class="color-item add-btn">
-    <span @click="toggleColorBox">
+    <span @click="colorBoxVisible = true">
       <svg-icon name="add" />
     </span>
     <div class="color-select" v-show="colorBoxVisible">
@@ -8,7 +8,7 @@
       <input type="color" ref="inputRef" />
       <footer>
         <button @click="handleConfirm" class="toolbar-btn primary">确认</button>
-        <button @click="handleCancel" class="toolbar-btn">取消</button>
+        <button @click="colorBoxVisible = false" class="toolbar-btn">取消</button>
       </footer>
     </div>
   </div>
@@ -18,38 +18,35 @@
 import SvgIcon from "./SvgIcon.vue";
 
 export default {
+  name: "AddNewColor",
   components: {
     SvgIcon,
   },
   props: {
-    visible: {
+    value: {
       type: Boolean,
       required: true,
     },
   },
   data() {
     return {
-      colorBoxVisible: this.visible,
+      colorBoxVisible: this.value,
     };
   },
   watch: {
-    visible(newVal) {
+    value(newVal) {
       this.colorBoxVisible = newVal;
     },
     colorBoxVisible(newVal) {
-      this.$emit("update:visible", newVal);
+      this.$emit("input", newVal);
     },
   },
   methods: {
-    toggleColorBox() {
-      this.colorBoxVisible = !this.colorBoxVisible;
+    getInputValue() {
+      return this.$refs.inputRef.value;
     },
     handleConfirm() {
-      const color = this.$refs.inputRef.value;
-      this.$emit("confirm", color);
-      this.colorBoxVisible = false;
-    },
-    handleCancel() {
+      this.$emit("confirm", this.getInputValue());
       this.colorBoxVisible = false;
     },
   },

@@ -3,6 +3,16 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 
 export default defineConfig({
+  build: {
+    outDir: 'dist/react',
+    rollupOptions: {
+      output: {
+        chunkFileNames: '[name]-[hash].js',
+        entryFileNames: '[name]-[hash].js',
+        assetFileNames: '[name]-[hash][extname]'
+      }
+    }
+  },
   plugins: [react()],
   assetsInclude: ['**/*.svg'],
   css: {
@@ -28,4 +38,4 @@ export default defineConfig({
       '@': path.resolve(__dirname, '../../src'),
     },
   }
-}); 
+});

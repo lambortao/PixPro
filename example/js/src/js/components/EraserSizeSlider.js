@@ -81,10 +81,6 @@ class EraserSizeSlider extends HTMLElement {
     this.shadowRoot.appendChild(style);
 
     // 添加到shadow DOM
-    const linkElem = document.createElement("link");
-    linkElem.setAttribute("rel", "stylesheet");
-    linkElem.setAttribute("href", "../css/EraserSizeSlider.css");
-    this.shadowRoot.appendChild(linkElem);
     this.shadowRoot.appendChild(template.content.cloneNode(true));
 
     // 获取元素引用

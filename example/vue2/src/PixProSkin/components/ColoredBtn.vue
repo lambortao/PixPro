@@ -1,7 +1,9 @@
 <template>
-  <button @click="handleClick" :disabled="disabled || loading" :loading="loading">
-    <svg-icon :name="icon" color="#fff" />
-    <span>{{ text }}</span>
+  <button class="colored-btn" :class="{ loading, disabled }" :disabled="disabled || loading" @click="$emit('click')">
+    <span class="btn-content">
+      <svg-icon v-if="loading" name="loading" :size="16" />
+      <span v-else>{{ text }}</span>
+    </span>
   </button>
 </template>
 
@@ -9,30 +11,22 @@
 import SvgIcon from "./SvgIcon.vue";
 
 export default {
+  name: "ColoredBtn",
   components: {
     SvgIcon,
   },
   props: {
     text: {
       type: String,
-      required: true,
-    },
-    icon: {
-      type: String,
-      default: "expand-btn",
-    },
-    disabled: {
-      type: Boolean,
-      default: false,
+      default: "按钮",
     },
     loading: {
       type: Boolean,
       default: false,
     },
-  },
-  methods: {
-    handleClick() {
-      this.$emit("click");
+    disabled: {
+      type: Boolean,
+      default: false,
     },
   },
 };

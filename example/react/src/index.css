@@ -12,8 +12,8 @@ body {
 
 /* App 容器样式 */
 .app-container {
-  width: 100vw;
-  height: 100vh;
+  /* width: 100vw;
+  height: 100vh; */
   overflow: hidden;
 }
 

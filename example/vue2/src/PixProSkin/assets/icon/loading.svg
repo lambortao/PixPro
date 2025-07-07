@@ -1,4 +1,4 @@
-<svg width="64" height="64" viewBox="0 0 18 14" xmlns="http://www.w3.org/2000/svg">
+<svg width="50" height="50" viewBox="0 0 24 18" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" stop-color="#FFFFFF">
@@ -19,7 +19,7 @@
       </stop>
     </linearGradient>
   </defs>
-  <path d="M6.43525 12.0556L4.62969 8.08333L0.657471 6.27778L4.62969 4.47222L6.43525 0.5L8.2408 4.47222L12.213 6.27778L8.2408 8.08333L6.43525 12.0556Z" fill="url(#gradient)">
+  <path d="M6.43525 12.0556L4.62969 8.08333L0.657471 6.27778L4.62969 4.47222L6.43525 0.5L8.2408 4.47222L12.213 6.27778L8.2408 8.08333L6.43525 12.0556Z" fill="url(#gradient)" transform="translate(3, 2)">
     <animateTransform
       attributeName="transform"
       type="scale"
@@ -30,10 +30,11 @@
       calcMode="spline"
       keyTimes="0; 0.25; 0.5; 1; 1"
       keySplines="0.4 0 0.2 1; 0.4 0 0.2 1; 0.4 0 0.2 1; 0.4 0 0.2 1"
+      additive="sum"
     />
   </path>
-  <g transform="translate(4, -2)">
-    <path d="M12.213 0.5L10.4074 4.0L6.435 5.5L10.4074 7.0L12.213 10.5L14.0186 7.0L17.991 5.5L14.0186 4.0L12.213 0.5Z" fill="url(#gradient)" transform="scale(0.5, 0.5)">
+  <g transform="translate(12, -1)">
+    <path d="M6.43525 12.0556L4.62969 8.08333L0.657471 6.27778L4.62969 4.47222L6.43525 0.5L8.2408 4.47222L12.213 6.27778L8.2408 8.08333L6.43525 12.0556Z" fill="url(#gradient)" transform="scale(0.5, 0.5)">
       <animateTransform
         attributeName="transform"
         type="scale"
@@ -48,7 +49,7 @@
       <animateTransform
         attributeName="transform"
         type="rotate"
-        values="0 12.213 5.5;0 12.213 5.5;180 12.213 5.5;180 12.213 5.5"
+        values="0 6.43525 6.27778;0 6.43525 6.27778;180 6.43525 6.27778;180 6.43525 6.27778"
         dur="3s"
         begin="0.5s"
         repeatCount="indefinite"

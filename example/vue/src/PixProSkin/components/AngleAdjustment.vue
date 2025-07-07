@@ -46,7 +46,7 @@ const props = defineProps<{
 const maxAngle = ref(props.maxAngle);
 const snapThreshold = ref(props.snapThreshold ?? 1);
 /** 速度因子，值越大移动越慢 */
-const speedFactor = ref(3);
+const speedFactor = ref(2);
 /** 需要吸附的角度数组，默认只有0度 */
 const snapAngles = ref([-90, -60, -45, -30, -15 , 0, 15, 30, 45, 60, 90]);
 const isSnapping = ref(false);

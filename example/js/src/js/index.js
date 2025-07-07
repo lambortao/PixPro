@@ -11,12 +11,43 @@ import PhotoStudio from "../../../../src/index";
 import "./components/ColoredBtn.js";
 import "./components/AngleAdjustment.js";
 import "./components/EraserSizeSlider.js";
+import "./components/AiLoading.js";
 import useColors from "./useColors.js";
 
 class PhotoEditor {
-  constructor() {
+  constructor(
+    {
+      token = "",
+      host = "https://api.pixpro.cc/",
+      cropRatios = {
+        original: 0,
+        "1:1": 1,
+        "3:4": 3 / 4,
+        "4:3": 4 / 3,
+        "9:16": 9 / 16,
+        "16:9": 16 / 9,
+      },
+      fitstImage = null,
+      showDownloadBtn = false,
+      routes = "/image/processing",
+      eraserSize = {
+        min: 20,
+        max: 100,
+        default: 50,
+      },
+    } = {},
+    togglePixProVisible
+  ) {
+    this.close = togglePixProVisible;
+    this.token = token;
+    this.host = host;
+    this.cropRatios = cropRatios || cropControlData;
+    this.fitstImage = fitstImage;
+    this.showDownloadBtn = showDownloadBtn;
+    this.routes = routes;
+    this.eraserSize = eraserSize;
+    this.defaultEraserSize = this.eraserSize.default;
     // 初始化状态变量
-
     this.nowLoading = {
       value: false,
     };
@@ -32,12 +63,9 @@ class PhotoEditor {
     this.originalWidth = 0; // 原始图片宽度
     this.originalHeight = 0; // 原始图片高度
     this.direction = null;
-    this.cropRatio = null;
     this.aiLoading = false;
     this.disabledForm = false;
     this.isInit = false;
-    this.token = "";
-    this.cropRatios = null;
     this.activeTab = null;
     this.currentColor = "transparent";
 
@@ -70,6 +98,12 @@ class PhotoEditor {
     this.initPageStructure();
     this.initDOMReferences();
     this.initImageStudio();
+    // 延迟执行，初始化图片
+    setTimeout(() => {
+      if (this.fitstImage) {
+        this.imageStudio.uploadFile(this.fitstImage);
+      }
+    }, 0);
     this.initPage();
 
     // 初始化颜色管理器
@@ -83,6 +117,7 @@ class PhotoEditor {
     // 创建主容器
     const mainElement = document.createElement("main");
     mainElement.className = "editor-main";
+    mainElement.id = "editorMain";
 
     // 创建HTML结构
     mainElement.innerHTML = `
@@ -110,10 +145,10 @@ class PhotoEditor {
             <img src="./src/img/icon/hd-btn.svg" alt="hd-btn" />
             <span>提升解析度</span>
           </div>
-          <div data-tab="compress">
+          <!-- <div data-tab="compress">
             <img src="./src/img/icon/compress-btn.svg" alt="compress-btn" />
             <span>压缩容量</span>
-          </div>
+          </div> -->
         </menu>
         <figure class="logo">
           <img src="./src/img/icon/logo.svg" alt="logo" />
@@ -152,7 +187,7 @@ class PhotoEditor {
             </div>
             <div class="confirm-actions">
               <span>
-                <button class="toolbar-btn primary-text" onclick="handleClose()">取消</button>
+                <button class="toolbar-btn primary-text" id="closeProgram">取消</button>
               </span>
               <span>
                 <button class="toolbar-btn primary" id="confirmBtn">下载</button>
@@ -162,9 +197,7 @@ class PhotoEditor {
         </header>
         <div class="image-content">
           <div class="image-box" id="imageBox">
-            <div id="loadingIcon" class="image-loading" style="display: none">
-              <img src="./src/img/icon/loading.svg" alt="loading" />
-            </div>
+            <ai-loading id="loadingIcon" class="image-loading" style="display: none"></ai-loading>
             <div class="container" id="photoStudioContainer"></div>
             <div id="progressBar" class="main-loading" style="display:none;">
               <div class="progress-bar">
@@ -192,12 +225,7 @@ class PhotoEditor {
     document.body.appendChild(mainElement);
     document.body.appendChild(exportImgBox);
 
-    // 为按钮加上点击事件
-    // const resetBtn = document.getElementById("resetBtn");
-    // const rollbackBtn = document.getElementById("rollbackBtn");
-    // const forwardBtn = document.getElementById("forwardBtn");
     const toolbarItems = document.querySelectorAll("button[data-tab]");
-    console.log(toolbarItems, "toolbarItems---------------");
     toolbarItems.forEach((item) => {
       item.addEventListener("click", () => {
         const tabName = item.getAttribute("data-tab");
@@ -255,8 +283,6 @@ class PhotoEditor {
           }
         });
       } else {
-        console.log(item);
-
         // 裁剪选项应用禁用样式，但不完全禁用功能
         item.classList.add("disabled-appearance");
       }
@@ -267,7 +293,16 @@ class PhotoEditor {
     const rollbackBtn = document.getElementById("rollbackBtn");
     const forwardBtn = document.getElementById("forwardBtn");
     const confirmBtn = document.getElementById("confirmBtn");
+    const closeProgram = document.getElementById("closeProgram");
 
+    if (!this.showDownloadBtn) {
+      confirmBtn.style.display = "none";
+    }
+    if (closeProgram) {
+      closeProgram.addEventListener("click", () => {
+        this.handleClose();
+      });
+    }
     if (confirmBtn) {
       confirmBtn.addEventListener("click", () => this.handleExportImage());
     }
@@ -292,9 +327,6 @@ class PhotoEditor {
       confirmBtn.classList.add("disabled");
     }
 
-    // 初始化图片编辑器
-    this.initImageStudio("", cropControlData);
-
     // 默认选中裁剪选项卡
     this.switchTab("crop");
 
@@ -309,20 +341,14 @@ class PhotoEditor {
    * @param {string} userToken - 用户token
    * @param {Object} userCropRatios - 裁剪比例配置
    */
-  initImageStudio(userToken = "", userCropRatios = null) {
-    this.token = userToken;
-    this.cropRatios = userCropRatios;
-    if (this.imageStudio) {
-      this.imageStudio.resetAll();
-      this.imageStudio = null;
-    }
-
+  initImageStudio() {
     this.imageStudio = new PhotoStudio(this.photoStudioContainer, {
       token: this.token,
       merchantId: "",
       isDev: false,
-      host: "https://api.pixpro.cc/",
-      routes: "/image/processing",
+      host: this.host,
+      routes: this.routes,
+      eraserSize: this.eraserSize,
       action: {
         extend: "ImageExpansion",
         erase: "LocalizedImageRemoval",
@@ -330,12 +356,10 @@ class PhotoEditor {
         hd: "EnhanceImageResolution",
       },
       realTimeChange: (step) => {
-        console.log(step, "step");
+        // console.log(step, "step");
 
         /** 实时计算宽高 */
         const { currentWidth, currentHeight } = this.getWH(step);
-        console.log(currentWidth, "realTimeChange");
-        console.log(currentHeight, "currentHeight");
 
         this.width = currentWidth;
         this.height = currentHeight;
@@ -365,6 +389,8 @@ class PhotoEditor {
         this.realTimeStep = step;
         this.nowStepList = stepList;
         this.nowStepIndex = currentStepIndex;
+        console.log(currentStepIndex, "currentStepIndex");
+
         this.nowStep = step;
         this.direction = step.direction ?? "vertical";
 
@@ -372,8 +398,7 @@ class PhotoEditor {
         this.currentColor = this?.nowStepList?.[this?.nowStepIndex]?.bgColor || "transparent";
 
         const { currentWidth, currentHeight } = this.getWH(step);
-        console.log(currentWidth, "realTimeChange-onStepChange");
-        console.log(currentHeight, "currentHeight-onStepChange");
+
         this.width = currentWidth;
         this.height = currentHeight;
         this.imgCurrentWidth = step.currentDomWidth / (step.cdProportions ?? 1);
@@ -408,22 +433,6 @@ class PhotoEditor {
         this.exportedImage.src = image;
         this.exportImgBox.style.display = "flex";
         this.handleClose();
-      },
-      onUpload: () => {
-        this.nowLoading.value = true;
-        this.isOperate = true;
-        // 显示操作栏
-        const controlsContainer = document.getElementById("controlsContainer");
-        controlsContainer.style.display = "flex";
-        // 显示角度调整组件
-        if (this.activeTab === "crop") {
-          this.renderAngleAdjustment();
-          this.imageRotateBox.style.display = "block";
-        }
-        this.aiLoading = true;
-      },
-      onProgress: (progress) => {
-        console.log("进度更新:", progress);
       },
       onFinish: () => {
         // 延迟执行，确保进度条有时间显示完成状态
@@ -462,6 +471,23 @@ class PhotoEditor {
           this.triggerCropRatio();
         }
       },
+      onUpload: () => {
+        this.nowLoading.value = true;
+        this.isOperate = true;
+        // 显示操作栏
+        const controlsContainer = document.getElementById("controlsContainer");
+        controlsContainer.style.display = "flex";
+        // 显示角度调整组件
+        if (this.activeTab === "crop") {
+          this.renderAngleAdjustment();
+          this.imageRotateBox.style.display = "block";
+        }
+        this.aiLoading = true;
+      },
+      onEraserSizeChange: (size) => {
+        this.eraserSize.default = size;
+        this.defaultEraserSize = size;
+      },
     });
   }
 
@@ -482,7 +508,7 @@ class PhotoEditor {
    */
   updateResolutionText() {
     if (this.resolutionText) {
-      this.resolutionText.textContent = "目标图片分辨率：" + `${this.width} x ${this.height}`;
+      this.resolutionText.textContent = "当前图片分辨率：" + `${this.width} x ${this.height}`;
     }
   }
 
@@ -508,8 +534,10 @@ class PhotoEditor {
     const forwardBtn = document.getElementById("forwardBtn");
 
     if (rollbackBtn) {
-      rollbackBtn.disabled = this.nowStepIndex <= 0;
-      rollbackBtn.classList.toggle("disabled", this.nowStepIndex <= 0);
+      // console.log(this.nowStepIndex, "this.nowStepIndex");
+
+      rollbackBtn.disabled = this.nowStepIndex < 1;
+      rollbackBtn.classList.toggle("disabled", this.nowStepIndex < 1);
     }
 
     if (forwardBtn) {
@@ -527,8 +555,8 @@ class PhotoEditor {
     }
 
     if (resetBtn) {
-      resetBtn.disabled = this.nowStepIndex <= 0;
-      resetBtn.classList.toggle("disabled", this.nowStepIndex <= 0);
+      resetBtn.disabled = this.nowStepIndex < 1;
+      resetBtn.classList.toggle("disabled", this.nowStepIndex < 1);
     }
 
     // 更新扩图和擦除按钮状态
@@ -543,7 +571,32 @@ class PhotoEditor {
    * 显示加载中
    */
   showLoading() {
+    // 计算loading图标的位置和大小
+    const imageBox = document.getElementById("imageBox");
+    const imageBoxWidth = imageBox?.offsetWidth ?? 0;
+    const imageBoxHeight = imageBox?.offsetHeight ?? 0;
+    const cropBoxWidth = this.realTimeStep?.cropBoxWidth ?? 0;
+    const cropBoxHeight = this.realTimeStep?.cropBoxHeight ?? 0;
+
+    // 设置loading图标的样式
+    this.loadingIcon.style.width = `${cropBoxWidth}px`;
+    this.loadingIcon.style.height = `${cropBoxHeight}px`;
+    this.loadingIcon.style.left = `${(imageBoxWidth - cropBoxWidth) / 2}px`;
+    this.loadingIcon.style.top = `${(imageBoxHeight - cropBoxHeight) / 2}px`;
+
+    // 使用新方法更新内部图片尺寸
+    this.loadingIcon.updateSize(cropBoxWidth, cropBoxHeight);
+
+    // 添加fade-enter-from类
+    this.loadingIcon.classList.add("fade-enter-from");
     this.loadingIcon.style.display = "flex";
+
+    // 强制回流后添加fade-enter-active类
+    requestAnimationFrame(() => {
+      this.loadingIcon.classList.remove("fade-enter-from");
+      this.loadingIcon.classList.add("fade-enter-active");
+    });
+
     this.fullScreenBlocker.style.display = "block";
   }
 
@@ -551,8 +604,16 @@ class PhotoEditor {
    * 隐藏加载中
    */
   hideLoading() {
-    this.loadingIcon.style.display = "none";
-    this.fullScreenBlocker.style.display = "none";
+    // 添加fade-leave-to类
+    this.loadingIcon.classList.add("fade-leave-to");
+    this.loadingIcon.classList.add("fade-leave-active");
+
+    // 等待动画结束后隐藏元素
+    setTimeout(() => {
+      this.loadingIcon.style.display = "none";
+      this.loadingIcon.classList.remove("fade-leave-to", "fade-leave-active", "fade-enter-active");
+      this.fullScreenBlocker.style.display = "none";
+    }, 300);
   }
 
   /**
@@ -564,10 +625,6 @@ class PhotoEditor {
   updateMenuBgStyle() {
     const menuItems = Object.keys(controlTextData);
     const activeIndex = menuItems.indexOf(this.activeTab);
-    console.log(menuItems, "menuItems");
-    console.log(this.activeTab, "activeTab");
-
-    console.log(activeIndex, "activeIndex");
 
     let top = 0;
     if (activeIndex !== -1) {
@@ -732,9 +789,9 @@ class PhotoEditor {
       case "hd":
         this.renderHdControls();
         break;
-      case "compress":
-        this.renderCompressControls();
-        break;
+      // case "compress":
+      //   this.renderCompressControls();
+      //   break;
     }
   }
 
@@ -748,15 +805,15 @@ class PhotoEditor {
         
         <div class="crop-ratios">
         <div class="ratio-bg"></div>
-          ${Object.entries(cropControlData)
+          ${Object.entries(this.cropRatios)
             .map(
-              ([label, ratio], index) => `
-            <div class="icon-btn ${!this.isInit ? "disabled" : ""} ${this.cropRatio && this.cropRatio.label === label ? "active" : ""}" 
+              ([label, ratio]) => `
+            <div class="icon-btn ${!this.isInit ? "disabled" : ""} ${this.cropRatios && this.cropRatios.label === label ? "active" : ""}" 
                   data-ratio="${ratio}" data-label="${label}">
               ${
                 label === "original"
                   ? `
-                <figure><img src="/src/img/icon/original.svg" alt="原比例"></figure>
+                <figure><img src="./src/img/icon/original.svg" alt="原比例"></figure>
                 <span>原比例</span>
               `
                   : `
@@ -774,19 +831,19 @@ class PhotoEditor {
         <div class="size-inputs">
           <div class="input-group">
             <label>宽度 (像素)</label>
-            <input type="number" id="widthInput" value="${this.width}" disabled>
+            <input type="number" id="widthInput" value="${this.width}">
           </div>
           <div class="input-group">
             <label>高度 (像素)</label>
-            <input type="number" id="heightInput" value="${this.height}" disabled>
+            <input type="number" id="heightInput" value="${this.height}">
           </div>
         </div>
       </div>
       <div class="section flip-btn">
-        <button title="左翻转" data-direction="left" ${!this.isInit ? "disabled" : ""}><img src="/src/img/icon/flip-l.svg" alt="左翻转"></button>
-        <button title="右翻转" data-direction="right" ${!this.isInit ? "disabled" : ""}><img src="/src/img/icon/flip-r.svg" alt="右翻转"></button>
-        <button title="上下翻转" data-direction="y" ${!this.isInit ? "disabled" : ""}><img src="/src/img/icon/flip-x.svg" alt="上下翻转"></button>
-        <button title="左右翻转" data-direction="x" ${!this.isInit ? "disabled" : ""}><img src="/src/img/icon/flip-y.svg" alt="左右翻转"></button>
+        <button title="左翻转" data-direction="left" ${!this.isInit ? "disabled" : ""}><img src="./src/img/icon/flip-l.svg" alt="左翻转"></button>
+        <button title="右翻转" data-direction="right" ${!this.isInit ? "disabled" : ""}><img src="./src/img/icon/flip-r.svg" alt="右翻转"></button>
+        <button title="上下翻转" data-direction="y" ${!this.isInit ? "disabled" : ""}><img src="./src/img/icon/flip-x.svg" alt="上下翻转"></button>
+        <button title="左右翻转" data-direction="x" ${!this.isInit ? "disabled" : ""}><img src="./src/img/icon/flip-y.svg" alt="左右翻转"></button>
       </div>
     </div>
   `;
@@ -814,6 +871,32 @@ class PhotoEditor {
       });
     });
 
+    // 添加尺寸输入事件监听
+    const widthInput = document.getElementById("widthInput");
+    const heightInput = document.getElementById("heightInput");
+
+    widthInput.addEventListener("blur", () => {
+      this.width = parseInt(widthInput.value, 10);
+      this.handleSizeChange("width");
+    });
+    widthInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        this.width = parseInt(widthInput.value, 10);
+        this.handleSizeChange("width");
+      }
+    });
+
+    heightInput.addEventListener("blur", () => {
+      this.height = parseInt(heightInput.value, 10);
+      this.handleSizeChange("height");
+    });
+    heightInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        this.height = parseInt(heightInput.value, 10);
+        this.handleSizeChange("height");
+      }
+    });
+
     // 添加翻转按钮事件监听
     const flipBtns = this.controlContent.querySelectorAll(".flip-btn button");
     flipBtns.forEach((btn) => {
@@ -833,15 +916,15 @@ class PhotoEditor {
     });
 
     // 如果没有选中任何比例，默认选中第一个
-    if (!this.cropRatio) {
-      const firstBtn = cropRatioBtns[0];
-      if (firstBtn) {
-        const ratio = parseFloat(firstBtn.getAttribute("data-ratio"));
-        const label = firstBtn.getAttribute("data-label");
-        this.handleCropRatio({ ratio: isNaN(ratio) ? null : ratio, label });
-        firstBtn.classList.add("active");
-      }
-    }
+    // if (!this.cropRatios) {
+    //   const firstBtn = cropRatioBtns[0];
+    //   if (firstBtn) {
+    //     const ratio = parseFloat(firstBtn.getAttribute("data-ratio"));
+    //     const label = firstBtn.getAttribute("data-label");
+    //     this.handleCropRatio({ ratio: isNaN(ratio) ? null : ratio, label });
+    //     firstBtn.classList.add("active");
+    //   }
+    // }
 
     // 更新菜单背景色块位置
     this.ratioBgStyle();
@@ -879,15 +962,15 @@ class PhotoEditor {
         <div class="section">
         <div class="crop-ratios">
           <div class="ratio-bg"></div>
-          ${Object.entries(cropControlData)
+          ${Object.entries(this.cropRatios)
             .map(
-              ([label, ratio], index) => `
-            <div class="icon-btn ${!this.isInit ? "disabled" : ""} ${this.cropRatio && this.cropRatio.label === label ? "active" : ""}" 
+              ([label, ratio]) => `
+            <div class="icon-btn ${!this.isInit ? "disabled" : ""} ${this.cropRatios && this.cropRatios.label === label ? "active" : ""}" 
                   data-ratio="${ratio}" data-label="${label}">
               ${
                 label === "original"
                   ? `
-                <figure><img src="/src/img/icon/original.svg" alt="原比例"></figure>
+                <figure><img src="./src/img/icon/original.svg" alt="原比例"></figure>
                 <span>原比例</span>
               `
                   : `
@@ -903,24 +986,22 @@ class PhotoEditor {
           <div class="size-inputs">
             <div class="input-group">
               <label>宽度 (像素)</label>
-              <input type="number" id="widthInput" value="${this.width}" disabled>
+              <input type="number" id="widthInput" value="${this.width}">
             </div>
             <div class="input-group">
               <label>高度 (像素)</label>
-              <input type="number" id="heightInput" value="${this.height}" disabled>
+              <input type="number" id="heightInput" value="${this.height}">
             </div>
           </div>
         </div>
         
         <div class="section">
-          <colored-btn id="expandImageBtn" text="扩展图片"></colored-btn>
+          <colored-btn id="expandImageBtn" text="一键扩展" style="display:none;"></colored-btn>
           <small id="expandWarning" style="display: none">原图图片分辨率需大于 300 x 300 且小于 3000 x 3000 才能扩图。</small>
         </div>
       </div>
     `;
-
     this.controlContent.innerHTML = expandControlsHtml;
-
     // 添加扩图比例点击事件和背景滑块动画
     const ratioItems = document.querySelectorAll(".crop-ratios .icon-btn");
     ratioItems.forEach((item) => {
@@ -945,31 +1026,45 @@ class PhotoEditor {
     const widthInput = document.getElementById("widthInput");
     const heightInput = document.getElementById("heightInput");
 
-    widthInput.addEventListener("change", () => {
+    widthInput.addEventListener("blur", () => {
       this.width = parseInt(widthInput.value, 10);
       this.handleSizeChange("width");
+    });
+    widthInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        this.width = parseInt(widthInput.value, 10);
+        this.handleSizeChange("width");
+      }
     });
 
     heightInput.addEventListener("change", () => {
       this.height = parseInt(heightInput.value, 10);
       this.handleSizeChange("height");
     });
+    heightInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        this.height = parseInt(heightInput.value, 10);
+        this.handleSizeChange("height");
+      }
+    });
 
     // 添加扩图按钮事件监听
     const expandImageBtn = document.getElementById("expandImageBtn");
-    console.log(expandImageBtn, "expandImageBtn");
+    if (expandImageBtn) {
+      expandImageBtn.addEventListener("click", () => {
+        // 检查是否可以扩图（判断是否有选择裁剪区域）
+        const expandDisabled = !this.realTimeStep || (parseFloat(this.realTimeStep.cropBoxHeight.toFixed(4)) === parseFloat(this.realTimeStep.fenceMinHeight.toFixed(4)) && parseFloat(this.realTimeStep.cropBoxWidth.toFixed(4)) === parseFloat(this.realTimeStep.fenceMinWidth.toFixed(4)) && this.realTimeStep.xDomOffset === 0 && this.realTimeStep.yDomOffset === 0);
 
-    expandImageBtn.addEventListener("click", () => {
-      // 检查是否可以扩图（判断是否有选择裁剪区域）
-      const expandDisabled = !this.realTimeStep || (parseFloat(this.realTimeStep.cropBoxHeight.toFixed(4)) === parseFloat(this.realTimeStep.fenceMinHeight.toFixed(4)) && parseFloat(this.realTimeStep.cropBoxWidth.toFixed(4)) === parseFloat(this.realTimeStep.fenceMinWidth.toFixed(4)) && this.realTimeStep.xDomOffset === 0 && this.realTimeStep.yDomOffset === 0);
+        if (expandDisabled) {
+          // 未选择裁剪区域，无法扩图
+          console.log("未选择裁剪区域，无法扩图");
+          return;
+        }
+        this.handleExpandImage();
+      });
+    }
 
-      if (expandDisabled) {
-        // 未选择裁剪区域，无法扩图
-        console.log("未选择裁剪区域，无法扩图");
-        return;
-      }
-      this.handleExpandImage();
-    });
+    // expandImageBtn.style.display = "block"; // 显示按钮
 
     // 更新扩图按钮状态
     this.updateExpandImageBtnStatus();
@@ -983,15 +1078,17 @@ class PhotoEditor {
    */
   updateExpandImageBtnStatus() {
     const expandImageBtn = document.getElementById("expandImageBtn");
+
     if (!expandImageBtn) return;
 
     // 检查是否可以扩图 - 参考Vue版本的实现方式
     const expandDisabled = !this.realTimeStep || (parseFloat(this.realTimeStep.cropBoxHeight.toFixed(4)) === parseFloat(this.realTimeStep.fenceMinHeight.toFixed(4)) && parseFloat(this.realTimeStep.cropBoxWidth.toFixed(4)) === parseFloat(this.realTimeStep.fenceMinWidth.toFixed(4)) && this.realTimeStep.xDomOffset === 0 && this.realTimeStep.yDomOffset === 0);
 
     if (expandDisabled) {
-      expandImageBtn.classList.add("disabled");
+      expandImageBtn.classList.add("coloredBtn-disabled");
+      expandImageBtn.style.display = "block";
     } else {
-      expandImageBtn.classList.remove("disabled");
+      expandImageBtn.classList.remove("coloredBtn-disabled");
     }
   }
 
@@ -1004,7 +1101,7 @@ class PhotoEditor {
       <div class="erase">
         <div class="section">
           <eraser-size-slider id="eraserSizeSlider" size="20" min="20" max="100"></eraser-size-slider>
-          <colored-btn id="eraseImageBtn" text="清除物件"></colored-btn>
+          <colored-btn id="eraseImageBtn" text="一键擦除"></colored-btn>
           <small id="eraseWarning" style="display: none">图片分辨率需大于 300 x 300 且小于 3000 x 3000 才能擦除。</small>
         </div>
       </div>
@@ -1015,6 +1112,9 @@ class PhotoEditor {
     // 添加擦除大小滑块事件监听
     const eraserSizeSlider = document.getElementById("eraserSizeSlider");
     if (eraserSizeSlider) {
+      eraserSizeSlider.setAttribute("min", this.eraserSize?.min);
+      eraserSizeSlider.setAttribute("max", this.eraserSize?.max);
+      eraserSizeSlider.setAttribute("size", this.defaultEraserSize);
       eraserSizeSlider.addEventListener("size-change", (event) => {
         this.setEraserSize(event.detail);
       });
@@ -1051,9 +1151,9 @@ class PhotoEditor {
     const eraseDisabled = !this.realTimeStep?.erasePoints?.length;
 
     if (eraseDisabled) {
-      eraseImageBtn.classList.add("disabled");
+      eraseImageBtn.classList.add("coloredBtn-disabled");
     } else {
-      eraseImageBtn.classList.remove("disabled");
+      eraseImageBtn.classList.remove("coloredBtn-disabled");
     }
   }
 
@@ -1168,7 +1268,6 @@ class PhotoEditor {
     colorItems.forEach((item) => {
       item.addEventListener("click", () => {
         const color = item.getAttribute("data-color");
-        console.log(123);
 
         this.handleColorChange(color);
 
@@ -1249,62 +1348,14 @@ class PhotoEditor {
    */
   triggerCropRatio() {
     // 判断是否需要自动触发裁剪比例
-    if (this.cropRatios && Object.keys(this.cropRatios).length > 0) {
-      // 若cropRatios中只有一个比例，直接使用
-      if (Object.keys(this.cropRatios).length === 1) {
-        const label = Object.keys(this.cropRatios)[0];
-        const ratio = this.cropRatios[label];
-        console.log("触发比例裁剪", ratio, label);
-        this.handleCropRatio({ ratio, label, isTrigger: false });
-      } else {
-        // 如果有多个比例，默认使用第一个
-        const label = Object.keys(this.cropRatios)[0];
-        const ratio = this.cropRatios[label];
-        this.handleCropRatio({ ratio, label, isTrigger: false });
-      }
-
-      // 更新UI显示
-      setTimeout(() => {
-        const cropRatioSection = document.getElementById("cropRatiosSection");
-        if (cropRatioSection) {
-          const buttons = cropRatioSection.querySelectorAll(".icon-btn");
-          // 移除所有active类
-          buttons.forEach((btn) => btn.classList.remove("active"));
-
-          // 默认选中第一个按钮
-          if (buttons.length > 0) {
-            buttons[0].classList.add("active");
-            this.ratioBgStyle();
-          }
-        }
-      }, 100);
-    } else if (cropControlData && Object.keys(cropControlData).length > 0) {
-      // 使用默认的裁剪比例
-      const label = Object.keys(cropControlData)[0];
-      const ratio = cropControlData[label];
-      this.handleCropRatio({ ratio, label, isTrigger: false });
-
-      // 更新UI显示
-      setTimeout(() => {
-        const cropRatioSection = document.getElementById("cropRatiosSection");
-        if (cropRatioSection) {
-          const buttons = cropRatioSection.querySelectorAll(".icon-btn");
-          // 移除所有active类
-          buttons.forEach((btn) => btn.classList.remove("active"));
-
-          // 默认选中第一个按钮
-          if (buttons.length > 0) {
-            buttons[0].classList.add("active");
-            this.ratioBgStyle();
-          }
-        }
-      }, 100);
+    if (this.cropRatios && Object.keys(this.cropRatios).length === 1) {
+      const ratio = this.cropRatios[Object.keys(this.cropRatios)[0]];
+      handleCropRatio({ ratio, label: Object.keys(this.cropRatios)[0], isTrigger: false });
     }
   }
 
   // 处理图片尺寸变化
   handleSizeChange(direction) {
-    console.log(direction, "-----------------------------");
     if (this.imageStudio) {
       this.imageStudio.setWidthAndHeight(this.width, this.height, direction);
     }
@@ -1314,18 +1365,20 @@ class PhotoEditor {
    */
 
   handleClose() {
-    console.log("handleClose");
-
     // 实现关闭处理逻辑
     if (this.imageStudio) {
       this.imageStudio.resetAll();
       this.imageStudio = null;
     }
-    // 重置UI状态
-    this.controlContent.innerHTML = "";
-    this.activeTab = null;
-    // 隐藏导出图片框
+    // 重置UI状态;
+    // this.activeTab = null;
+    // 隐藏导出图片框;
     this.exportImgBox.style.display = "none";
+
+    console.log("111111");
+    const mainElement = document.getElementById("editorMain");
+    document.body.removeChild(mainElement);
+    this.close(false);
   }
 
   // 导出图片
@@ -1367,10 +1420,7 @@ class PhotoEditor {
   }
 
   handleCropRatio(ratioData) {
-    console.log(ratioData, "ratioData-----------");
-
     if (this.imageStudio) {
-      this.cropRatio = ratioData;
       this.imageStudio.cropRatio(ratioData);
     }
   }
@@ -1468,5 +1518,4 @@ class PhotoEditor {
 
 // 挂载到全局
 window.PhotoEditor = PhotoEditor;
-
 export default PhotoEditor;

@@ -83,6 +83,11 @@ const props = defineProps<{
     max: number
     default: number
   }
+  /** 水印 */
+  watermark?: {
+    visible: boolean
+    text: string
+  }
 }>()
 
 const emits = defineEmits<{
@@ -148,6 +153,7 @@ function initImageStudio() {
     host: props.host,
     routes: props.routes ?? '/image/processing',
     eraserSize: eraserSize.value,
+    watermark: props.watermark,
     action: {
       extend: 'ImageExpansion',
       erase: 'LocalizedImageRemoval',

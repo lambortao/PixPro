@@ -1,4 +1,4 @@
-@import './_constant.less';
+@import "./_constant.less";
 
 .editor-main {
   position: fixed;
@@ -10,6 +10,7 @@
   padding: 46px;
   box-sizing: border-box;
   z-index: 99;
+  font-family: "Microsoft Yahei", "PingFang SC", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
 
   header {
     height: 56px;
@@ -17,7 +18,7 @@
 }
 
 .error-text {
-  color: #569AFB;
+  color: #f35353;
   font-size: 13px;
   margin-top: 5px;
   text-align: center;
@@ -43,7 +44,7 @@
     border: none;
     background: none;
   }
-  
+
   // 侧边栏
   nav {
     width: 160px;
@@ -82,13 +83,15 @@
         margin: 5px 0;
         position: relative;
         z-index: 1;
-        
+
         &:hover {
           background-color: transparent;
         }
 
         i {
           margin-right: 5px;
+          width: 15px;
+          height: 15px;
         }
 
         span {
@@ -137,7 +140,7 @@
         font-weight: 500;
       }
       small {
-        color: #9198A9;
+        color: #9198a9;
         margin-top: 10px;
         display: block;
       }
@@ -217,7 +220,7 @@
       display: grid;
       grid-template-columns: repeat(auto-fill, 50px);
       gap: 5px;
-      
+
       .color-item {
         width: 50px;
         height: 50px;
@@ -231,7 +234,7 @@
         span {
           display: block;
           box-sizing: border-box;
-          border: 1px solid #CDD5DD;
+          border: 1px solid #cdd5dd;
           width: 100%;
           height: 100%;
           border-radius: 6px;
@@ -247,7 +250,7 @@
           cursor: pointer;
           background-color: #fff;
           border-radius: 50%;
-          border: 1px solid #CDD5DD;
+          border: 1px solid #cdd5dd;
           opacity: 0;
           .ani300();
         }
@@ -267,7 +270,7 @@
           }
         }
 
-        &.transparent{
+        &.transparent {
           overflow: hidden;
           span {
             display: flex;
@@ -275,7 +278,7 @@
             justify-content: center;
             overflow: hidden;
             &::before {
-              content: '';
+              content: "";
               width: 60px;
               height: 1px;
               background-color: red;
@@ -298,7 +301,8 @@
     display: flex;
     flex-direction: column;
 
-    .reset-actions, .step-actions {
+    .reset-actions,
+    .step-actions {
       .btn-line();
     }
 
@@ -312,7 +316,7 @@
       border-bottom: 1px solid #e8e8e8;
 
       .toolbar-status {
-        color: #184AFF;
+        color: #184aff;
         font-size: 14px;
       }
 
@@ -379,7 +383,7 @@
           box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
           backdrop-filter: blur(3px);
           transition: opacity 0.3s ease;
-          
+
           .progress-bar {
             position: relative;
             width: 180px;
@@ -388,7 +392,7 @@
             border-radius: 2px;
             overflow: hidden;
             margin-right: 12px;
-            
+
             .progress-fill {
               height: 100%;
               width: 100%;
@@ -400,14 +404,14 @@
               position: relative;
             }
           }
-          
+
           .progress-percentage {
             color: #ffffff;
             font-size: 13px;
             min-width: 36px;
             text-align: right;
             font-weight: 500;
-            font-family: 'Arial', sans-serif;
+            font-family: "Arial", sans-serif;
           }
         }
       }
@@ -420,7 +424,6 @@
     }
   }
 
-  
   .toolbar-btn {
     padding: 8px 20px;
     border: none;

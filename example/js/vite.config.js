@@ -1,5 +1,5 @@
-import { defineConfig } from 'vite';
-import path from 'path';
+import { defineConfig } from "vite";
+import path from "path";
 
 export default defineConfig({
   server: {
@@ -8,16 +8,27 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, '../../src'),
+      "@": path.resolve(__dirname, "../../src"),
     },
   },
   optimizeDeps: {
-    include: ['@/index']
+    include: ["@/index"],
   },
-  publicDir: 'public',
+  publicDir: "public",
   build: {
-    assetsDir: 'assets',
+    outDir: "dist",
+    assetsDir: "",
     assetsInlineLimit: 4096,
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, "index.html"),
+      },
+      output: {
+        entryFileNames: "[name].[hash].js",
+        chunkFileNames: "[name].[hash].js",
+        assetFileNames: "[name].[hash].[ext]",
+      },
+    },
   },
-  assetsInclude: ['**/*.svg'],
-}); 
+  assetsInclude: ["**/*.svg"],
+});

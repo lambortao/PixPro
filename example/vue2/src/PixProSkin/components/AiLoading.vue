@@ -16,6 +16,7 @@
 
 <script>
 import SvgIcon from "./SvgIcon.vue";
+import loadingImage from "../assets/images/loading.png"; // Make sure this path is correct
 
 export default {
   components: {
@@ -33,22 +34,54 @@ export default {
   },
   data() {
     return {
-      containerSize: {
-        width: 0,
-        height: 0,
-      },
-      imageSrc: require("../assets/images/loading.png"), // 请替换为实际图片路径
+      imageSrc: loadingImage,
+      containerSize: { width: 0, height: 0 },
       observer: null,
     };
   },
   computed: {
     baseScale() {
       const diagonal = Math.sqrt(Math.pow(this.containerSize.width, 2) + Math.pow(this.containerSize.height, 2));
-      return (diagonal / 2000) * 1.1; // 增加10%安全边距
+      return (diagonal / 2000) * 1.2; // 增加10%安全边距
     },
     baseTransform() {
       return `translate(-50%, -50%) scale(${this.baseScale})`;
     },
+  },
+  beforeDestroy() {
+    if (this.observer) this.observer.disconnect();
+  },
+  mounted() {
+    this.updateContainerSize();
+
+    // 监听尺寸变化
+    this.observer = new ResizeObserver(this.updateContainerSize);
+    if (this.$refs.containerRef) {
+      this.observer.observe(this.$refs.containerRef);
+    }
+
+    const keyframes = Array.from({ length: 20 }, (_, i) => {
+      const progress = i / 19; // 0到1
+      const angle = progress * 2160; // 旋转四周（1440度）
+      const scale = 0.8 + Math.abs(Math.sin(progress * Math.PI * 4)) * 0.8; // 波动缩放
+      const translateX = Math.sin(progress * Math.PI * 6) * 2; // X轴位移
+      const translateY = Math.cos(progress * Math.PI * 3) * 3; // Y轴位移
+
+      return `
+        ${((i / 19) * 100).toFixed(2)}% {
+          transform: translate(-50%, -50%) 
+            scale(${this.baseScale * scale}) 
+            rotate(${angle}deg)
+            translate(${translateX}%, ${translateY}%);
+        }`;
+    }).join("");
+
+    const style = document.createElement("style");
+    style.textContent = `
+      @keyframes complexAnimation {
+        ${keyframes}
+      }`;
+    document.head.appendChild(style);
   },
   methods: {
     updateContainerSize() {
@@ -59,54 +92,6 @@ export default {
         };
       }
     },
-    injectKeyframes() {
-      const keyframes = Array.from({ length: 20 }, (_, i) => {
-        const progress = i / 19; // 0到1
-        const angle = progress * 2160; // 旋转四周（1440度）
-        const scale = 0.8 + Math.abs(Math.sin(progress * Math.PI * 4)) * 0.8; // 波动缩放
-        const translateX = Math.sin(progress * Math.PI * 6) * 2; // X轴位移
-        const translateY = Math.cos(progress * Math.PI * 3) * 3; // Y轴位移
-
-        return `
-          ${((i / 19) * 100).toFixed(2)}% {
-            transform: translate(-50%, -50%) 
-              scale(${this.baseScale * scale}) 
-              rotate(${angle}deg)
-              translate(${translateX}%, ${translateY}%);
-          }`;
-      }).join("");
-
-      const style = document.createElement("style");
-      style.textContent = `
-        @keyframes complexAnimation {
-          ${keyframes}
-        }
-        .animated-image {
-          animation: complexAnimation 12s infinite linear;
-          transform-origin: center center;
-          will-change: transform;
-        }
-      `;
-      document.head.appendChild(style);
-    },
-  },
-  mounted() {
-    // 获取初始尺寸
-    this.updateContainerSize();
-
-    // 监听尺寸变化
-    this.observer = new ResizeObserver(this.updateContainerSize);
-    if (this.$refs.containerRef) {
-      this.observer.observe(this.$refs.containerRef);
-    }
-
-    // 动态注入关键帧
-    this.injectKeyframes();
-  },
-  beforeDestroy() {
-    if (this.observer) {
-      this.observer.disconnect();
-    }
   },
 };
 </script>

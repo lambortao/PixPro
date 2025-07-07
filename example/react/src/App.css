@@ -1,29 +1,46 @@
-body {
-  margin: 0;
-  padding: 0;
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
 }
-.box {
-  width: 100%;
-  height: 100%;
-  padding: 60px 40px;
-  box-sizing: border-box;
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.upload-container {
+  padding: 20px;
+}
+
+.upload-button {
+  padding: 12px 24px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.upload-button .el-icon {
+  margin-right: 8px;
+}
+
+.export-img-box {
+  max-width: 80vw;
+  max-height: 80vw;
+  margin: 20px auto;
   overflow: hidden;
 }
-.export-img-box {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  padding: 46px;
-  box-sizing: border-box;
-  z-index: 3;
+
+.export-img-box img {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.buttons-container {
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-top: 20px;
 }
-.export-img-box img {
-  max-width: 80%;
-  max-height: 80%;
+
+.buttons-container .action-btn {
+  margin: 0 10px;
 }

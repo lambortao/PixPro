@@ -28,9 +28,6 @@ export default class useColors {
   }
 
   removeLocalColorStorage(color) {
-    console.log(color, "color");
-    console.log(this.currentColor, "this.currentColor");
-
     const index = this.localColorList.indexOf(color);
     if (index !== -1) {
       this.localColorList.splice(index, 1);

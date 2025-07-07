@@ -24,7 +24,7 @@
 }
 
 .colored-btn:disabled {
-  background: #ccc;
+  background: #ccc !important;
   cursor: not-allowed;
 }
 
